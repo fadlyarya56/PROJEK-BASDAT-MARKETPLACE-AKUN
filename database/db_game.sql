@@ -16,12 +16,10 @@
 
 
 -- Dumping database structure for db_game
-DROP DATABASE IF EXISTS `db_game`;
 CREATE DATABASE IF NOT EXISTS `db_game` /*!40100 DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci */;
 USE `db_game`;
 
 -- Dumping structure for table db_game.accounts
-DROP TABLE IF EXISTS `accounts`;
 CREATE TABLE IF NOT EXISTS `accounts` (
   `account_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `game_id` bigint(20) unsigned NOT NULL,
@@ -41,10 +39,50 @@ CREATE TABLE IF NOT EXISTS `accounts` (
   CONSTRAINT `accounts_game_id_foreign` FOREIGN KEY (`game_id`) REFERENCES `games` (`game_id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Dumping data for table db_game.accounts: ~0 rows (approximately)
+-- Dumping data for table db_game.accounts: ~40 rows (approximately)
+INSERT INTO `accounts` (`account_id`, `game_id`, `title`, `price`, `image_url`, `description`, `account_email`, `email_password`, `game_password`, `status`, `sold_at`, `created_at`, `updated_at`) VALUES
+	(11, 1, '', 150000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser01@example.com', 'DummyEmail01!', 'MLdummy01!', 'tersedia', NULL, NULL, NULL),
+	(12, 1, '', 200000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser02@example.com', 'DummyEmail02!', 'MLdummy02!', 'terjual', NULL, NULL, NULL),
+	(13, 1, '', 250000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser03@example.com', 'DummyEmail03!', 'MLdummy03!', 'tersedia', NULL, NULL, NULL),
+	(14, 1, '', 300000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser04@example.com', 'DummyEmail04!', 'MLdummy04!', 'terjual', NULL, NULL, NULL),
+	(15, 1, '', 350000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser05@example.com', 'DummyEmail05!', 'MLdummy05!', 'tersedia', NULL, NULL, NULL),
+	(16, 2, '', 175000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser01@example.com', 'DummyEmail06!', 'EFBdummy01!', 'tersedia', NULL, NULL, NULL),
+	(17, 2, '', 225000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser02@example.com', 'DummyEmail07!', 'EFBdummy02!', 'terjual', NULL, NULL, NULL),
+	(18, 2, '', 275000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser03@example.com', 'DummyEmail08!', 'EFBdummy03!', 'tersedia', NULL, NULL, NULL),
+	(19, 2, '', 325000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser04@example.com', 'DummyEmail09!', 'EFBdummy04!', 'terjual', NULL, NULL, NULL),
+	(20, 2, '', 400000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser05@example.com', 'DummyEmail10!', 'EFBdummy05!', 'tersedia', NULL, NULL, NULL),
+	(21, 1, '', 150000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser01@example.com', 'DummyEmail01!', 'MLdummy01!', 'tersedia', NULL, NULL, NULL),
+	(22, 1, '', 200000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser02@example.com', 'DummyEmail02!', 'MLdummy02!', 'terjual', NULL, NULL, NULL),
+	(23, 1, '', 250000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser03@example.com', 'DummyEmail03!', 'MLdummy03!', 'tersedia', NULL, NULL, NULL),
+	(24, 1, '', 300000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser04@example.com', 'DummyEmail04!', 'MLdummy04!', 'terjual', NULL, NULL, NULL),
+	(25, 1, '', 350000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser05@example.com', 'DummyEmail05!', 'MLdummy05!', 'tersedia', NULL, NULL, NULL),
+	(26, 2, '', 175000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser01@example.com', 'DummyEmail06!', 'EFBdummy01!', 'tersedia', NULL, NULL, NULL),
+	(27, 2, '', 225000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser02@example.com', 'DummyEmail07!', 'EFBdummy02!', 'terjual', NULL, NULL, NULL),
+	(28, 2, '', 275000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser03@example.com', 'DummyEmail08!', 'EFBdummy03!', 'tersedia', NULL, NULL, NULL),
+	(29, 2, '', 325000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser04@example.com', 'DummyEmail09!', 'EFBdummy04!', 'terjual', NULL, NULL, NULL),
+	(30, 2, '', 400000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser05@example.com', 'DummyEmail10!', 'EFBdummy05!', 'tersedia', NULL, NULL, NULL),
+	(31, 1, '', 150000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser01@example.com', 'DummyEmail01!', 'MLdummy01!', 'tersedia', NULL, NULL, NULL),
+	(32, 1, '', 200000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser02@example.com', 'DummyEmail02!', 'MLdummy02!', 'terjual', NULL, NULL, NULL),
+	(33, 1, '', 250000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser03@example.com', 'DummyEmail03!', 'MLdummy03!', 'tersedia', NULL, NULL, NULL),
+	(34, 1, '', 300000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser04@example.com', 'DummyEmail04!', 'MLdummy04!', 'terjual', NULL, NULL, NULL),
+	(35, 1, '', 350000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser05@example.com', 'DummyEmail05!', 'MLdummy05!', 'tersedia', NULL, NULL, NULL),
+	(36, 2, '', 175000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser01@example.com', 'DummyEmail06!', 'EFBdummy01!', 'tersedia', NULL, NULL, NULL),
+	(37, 2, '', 225000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser02@example.com', 'DummyEmail07!', 'EFBdummy02!', 'terjual', NULL, NULL, NULL),
+	(38, 2, '', 275000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser03@example.com', 'DummyEmail08!', 'EFBdummy03!', 'tersedia', NULL, NULL, NULL),
+	(39, 2, '', 325000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser04@example.com', 'DummyEmail09!', 'EFBdummy04!', 'terjual', NULL, NULL, NULL),
+	(40, 2, '', 400000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser05@example.com', 'DummyEmail10!', 'EFBdummy05!', 'tersedia', NULL, NULL, NULL),
+	(41, 1, '', 150000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser01@example.com', 'DummyEmail01!', 'MLdummy01!', 'tersedia', NULL, NULL, NULL),
+	(42, 1, '', 200000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser02@example.com', 'DummyEmail02!', 'MLdummy02!', 'terjual', NULL, NULL, NULL),
+	(43, 1, '', 250000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser03@example.com', 'DummyEmail03!', 'MLdummy03!', 'tersedia', NULL, NULL, NULL),
+	(44, 1, '', 300000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser04@example.com', 'DummyEmail04!', 'MLdummy04!', 'terjual', NULL, NULL, NULL),
+	(45, 1, '', 350000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'mluser05@example.com', 'DummyEmail05!', 'MLdummy05!', 'tersedia', NULL, NULL, NULL),
+	(46, 2, '', 175000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser01@example.com', 'DummyEmail06!', 'EFBdummy01!', 'tersedia', NULL, NULL, NULL),
+	(47, 2, '', 225000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser02@example.com', 'DummyEmail07!', 'EFBdummy02!', 'terjual', NULL, NULL, NULL),
+	(48, 2, '', 275000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser03@example.com', 'DummyEmail08!', 'EFBdummy03!', 'tersedia', NULL, NULL, NULL),
+	(49, 2, '', 325000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser04@example.com', 'DummyEmail09!', 'EFBdummy04!', 'terjual', NULL, NULL, NULL),
+	(50, 2, '', 400000.00, NULL, 'Akun siap dimainkan, data sesuai deskripsi dan aman untuk digunakan.', 'efbuser05@example.com', 'DummyEmail10!', 'EFBdummy05!', 'tersedia', NULL, NULL, NULL);
 
 -- Dumping structure for table db_game.admins
-DROP TABLE IF EXISTS `admins`;
 CREATE TABLE IF NOT EXISTS `admins` (
   `admin_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `username` varchar(255) NOT NULL,
@@ -58,7 +96,6 @@ CREATE TABLE IF NOT EXISTS `admins` (
 -- Dumping data for table db_game.admins: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.buyers
-DROP TABLE IF EXISTS `buyers`;
 CREATE TABLE IF NOT EXISTS `buyers` (
   `buyer_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -72,7 +109,6 @@ CREATE TABLE IF NOT EXISTS `buyers` (
 -- Dumping data for table db_game.buyers: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.cache
-DROP TABLE IF EXISTS `cache`;
 CREATE TABLE IF NOT EXISTS `cache` (
   `key` varchar(255) NOT NULL,
   `value` mediumtext NOT NULL,
@@ -84,7 +120,6 @@ CREATE TABLE IF NOT EXISTS `cache` (
 -- Dumping data for table db_game.cache: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.cache_locks
-DROP TABLE IF EXISTS `cache_locks`;
 CREATE TABLE IF NOT EXISTS `cache_locks` (
   `key` varchar(255) NOT NULL,
   `owner` varchar(255) NOT NULL,
@@ -96,7 +131,6 @@ CREATE TABLE IF NOT EXISTS `cache_locks` (
 -- Dumping data for table db_game.cache_locks: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.failed_jobs
-DROP TABLE IF EXISTS `failed_jobs`;
 CREATE TABLE IF NOT EXISTS `failed_jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `uuid` varchar(255) NOT NULL,
@@ -113,7 +147,6 @@ CREATE TABLE IF NOT EXISTS `failed_jobs` (
 -- Dumping data for table db_game.failed_jobs: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.games
-DROP TABLE IF EXISTS `games`;
 CREATE TABLE IF NOT EXISTS `games` (
   `game_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -126,9 +159,11 @@ CREATE TABLE IF NOT EXISTS `games` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Dumping data for table db_game.games: ~0 rows (approximately)
+INSERT INTO `games` (`game_id`, `name`, `webmail_url`, `guide_url`, `email_template`, `created_at`, `updated_at`) VALUES
+	(1, 'Mobile Legends', NULL, NULL, NULL, NULL, NULL),
+	(2, 'eFootball', NULL, NULL, NULL, NULL, NULL);
 
 -- Dumping structure for table db_game.jobs
-DROP TABLE IF EXISTS `jobs`;
 CREATE TABLE IF NOT EXISTS `jobs` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `queue` varchar(255) NOT NULL,
@@ -144,7 +179,6 @@ CREATE TABLE IF NOT EXISTS `jobs` (
 -- Dumping data for table db_game.jobs: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.job_batches
-DROP TABLE IF EXISTS `job_batches`;
 CREATE TABLE IF NOT EXISTS `job_batches` (
   `id` varchar(255) NOT NULL,
   `name` varchar(255) NOT NULL,
@@ -162,7 +196,6 @@ CREATE TABLE IF NOT EXISTS `job_batches` (
 -- Dumping data for table db_game.job_batches: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.migrations
-DROP TABLE IF EXISTS `migrations`;
 CREATE TABLE IF NOT EXISTS `migrations` (
   `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
   `migration` varchar(255) NOT NULL,
@@ -184,7 +217,6 @@ INSERT INTO `migrations` (`id`, `migration`, `batch`) VALUES
 	(10, '2026_09_24_174257_create_status_logs_table', 1);
 
 -- Dumping structure for table db_game.orders
-DROP TABLE IF EXISTS `orders`;
 CREATE TABLE IF NOT EXISTS `orders` (
   `order_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `buyer_id` bigint(20) unsigned NOT NULL,
@@ -203,7 +235,6 @@ CREATE TABLE IF NOT EXISTS `orders` (
 -- Dumping data for table db_game.orders: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.password_reset_tokens
-DROP TABLE IF EXISTS `password_reset_tokens`;
 CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
   `email` varchar(255) NOT NULL,
   `token` varchar(255) NOT NULL,
@@ -214,7 +245,6 @@ CREATE TABLE IF NOT EXISTS `password_reset_tokens` (
 -- Dumping data for table db_game.password_reset_tokens: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.payments
-DROP TABLE IF EXISTS `payments`;
 CREATE TABLE IF NOT EXISTS `payments` (
   `payment_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `order_id` bigint(20) unsigned NOT NULL,
@@ -235,7 +265,6 @@ CREATE TABLE IF NOT EXISTS `payments` (
 -- Dumping data for table db_game.payments: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.sessions
-DROP TABLE IF EXISTS `sessions`;
 CREATE TABLE IF NOT EXISTS `sessions` (
   `id` varchar(255) NOT NULL,
   `user_id` bigint(20) unsigned DEFAULT NULL,
@@ -251,7 +280,6 @@ CREATE TABLE IF NOT EXISTS `sessions` (
 -- Dumping data for table db_game.sessions: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.status_logs
-DROP TABLE IF EXISTS `status_logs`;
 CREATE TABLE IF NOT EXISTS `status_logs` (
   `log_id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `account_id` bigint(20) unsigned NOT NULL,
@@ -266,7 +294,6 @@ CREATE TABLE IF NOT EXISTS `status_logs` (
 -- Dumping data for table db_game.status_logs: ~0 rows (approximately)
 
 -- Dumping structure for table db_game.users
-DROP TABLE IF EXISTS `users`;
 CREATE TABLE IF NOT EXISTS `users` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `name` varchar(255) NOT NULL,
@@ -283,7 +310,6 @@ CREATE TABLE IF NOT EXISTS `users` (
 -- Dumping data for table db_game.users: ~0 rows (approximately)
 
 -- Dumping structure for trigger db_game.after_account_status_update
-DROP TRIGGER IF EXISTS `after_account_status_update`;
 SET @OLDTMP_SQL_MODE=@@SQL_MODE, SQL_MODE='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_ENGINE_SUBSTITUTION';
 DELIMITER //
 CREATE TRIGGER after_account_status_update
