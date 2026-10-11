@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Account extends Model
 {
     protected $table = 'accounts';
+
     protected $primaryKey = 'account_id';
 
     protected $fillable = [
@@ -30,7 +31,7 @@ class Account extends Model
     ];
 
     protected $casts = [
-        'price'   => 'decimal:2',
+        'price' => 'decimal:2',
         'sold_at' => 'datetime',
     ];
 
@@ -42,5 +43,20 @@ class Account extends Model
     public function orders()
     {
         return $this->hasMany(Order::class, 'account_id', 'account_id');
+    }
+
+    protected $appends = ['image_full_url'];
+
+    public function getImageFullUrlAttribute(): ?string
+    {
+        if (! $this->image_url) {
+            return null;
+        }
+
+        if (str_starts_with($this->image_url, 'http://') || str_starts_with($this->image_url, 'https://')) {
+            return $this->image_url;
+        }
+
+        return asset('storage/'.$this->image_url);
     }
 }

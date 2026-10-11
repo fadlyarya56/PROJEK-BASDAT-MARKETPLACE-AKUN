@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Payment extends Model
 {
     protected $table = 'payments';
+
     protected $primaryKey = 'payment_id';
 
     protected $fillable = [
@@ -30,5 +31,12 @@ class Payment extends Model
     public function confirmedBy()
     {
         return $this->belongsTo(Admin::class, 'confirmed_by', 'admin_id');
+    }
+
+    protected $appends = ['proof_image_url'];
+
+    public function getProofImageUrlAttribute(): ?string
+    {
+        return $this->proof_image ? asset('storage/'.$this->proof_image) : null;
     }
 }

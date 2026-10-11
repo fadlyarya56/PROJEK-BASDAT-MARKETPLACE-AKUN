@@ -10,6 +10,7 @@ use App\Models\Payment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
 class PaymentAdminController extends Controller
@@ -17,13 +18,15 @@ class PaymentAdminController extends Controller
     /**
      * List semua payment yang masih menunggu konfirmasi admin.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $payments = Payment::with(['order.account.game', 'order.buyer'])
-            ->where('status', 'menunggu')
-            ->whereHas('order', fn ($q) => $q->where('status', 'menunggu_konfirmasi'))
-            ->latest('created_at')
-            ->get();
+        $status = $request->query('status'); // misal: menunggu, dikonfirmasi, ditolak, atau null (semua)
+        $query = Payment::with(['order.account.game', 'order.buyer', 'confirmedBy'])
+            ->latest('created_at');
+        if ($status && in_array($status, ['menunggu', 'dikonfirmasi', 'ditolak'])) {
+            $query->where('status', $status);
+        }
+        $payments = $query->paginate(15);
 
         return response()->json($payments);
     }
@@ -38,38 +41,74 @@ class PaymentAdminController extends Controller
         $result = DB::transaction(function () use ($payment_id) {
             $payment = Payment::with('order')->findOrFail($payment_id);
             $order = $payment->order;
-
-            // Lock baris akun biar gak ke-update bersamaan dari proses lain
             $account = Account::where('account_id', $order->account_id)
                 ->lockForUpdate()
                 ->firstOrFail();
-
             if ($account->status === 'terjual') {
                 abort(409, 'Akun ini sudah berstatus terjual sebelumnya.');
             }
-
             $payment->update([
-                'status'       => 'dikonfirmasi',
+                'status' => 'dikonfirmasi',
                 'confirmed_by' => Auth::guard('admin')->id(),
                 'confirmed_at' => now(),
             ]);
-
             $order->update(['status' => 'valid']);
-
-            // Trigger di MySQL otomatis insert ke status_logs saat baris ini berubah
             $account->update([
-                'status'  => 'terjual',
+                'status' => 'terjual',
                 'sold_at' => now(),
             ]);
 
             return $order->fresh(['account.game', 'buyer']);
         });
-
-        Mail::to($result->delivery_email)->send(new AccountDelivered($result->account));
+        // Kirim email dengan penanganan error
+        $emailSent = false;
+        $emailErrorMessage = null;
+        try {
+            Mail::to($result->delivery_email)->send(new AccountDelivered($result->account));
+            $emailSent = true;
+        } catch (\Throwable $e) {
+            Log::error("SMTP Error saat approve payment #{$payment_id} (Order #{$result->order_id}): ".$e->getMessage(), [
+                'exception' => $e,
+                'delivery_email' => $result->delivery_email,
+            ]);
+            $emailErrorMessage = $e->getMessage();
+        }
 
         return response()->json([
-            'message' => 'Pembayaran dikonfirmasi, akun terkirim ke email pembeli.',
+            'message' => $emailSent
+                ? 'Pembayaran dikonfirmasi, akun berhasil terkirim ke email pembeli.'
+                : 'Pembayaran dikonfirmasi, namun email gagal terkirim karena kendala SMTP. Silakan gunakan tombol "Kirim Ulang Email".',
+            'email_sent' => $emailSent,
+            'order_id' => $result->order_id,
         ]);
+    }
+
+    /**
+     * Admin mengirim ulang email data akun ke pembeli.
+     */
+    public function resendEmail(Request $request, $order_id)
+    {
+        $order = Order::with(['account.game'])->findOrFail($order_id);
+
+        if ($order->status !== 'valid' || ! $order->account) {
+            return response()->json([
+                'message' => 'Email hanya dapat dikirim ulang untuk pesanan yang sudah berstatus valid.',
+            ], 422);
+        }
+
+        try {
+            Mail::to($order->delivery_email)->send(new AccountDelivered($order->account));
+
+            return response()->json([
+                'message' => "Email berhasil dikirim ulang ke {$order->delivery_email}.",
+            ]);
+        } catch (\Throwable $e) {
+            Log::error("SMTP Error saat resend email order #{$order_id}: ".$e->getMessage());
+
+            return response()->json([
+                'message' => 'Gagal mengirim email: '.$e->getMessage(),
+            ], 500);
+        }
     }
 
     /**
@@ -83,7 +122,7 @@ class PaymentAdminController extends Controller
             $order = $payment->order;
 
             $payment->update([
-                'status'       => 'ditolak',
+                'status' => 'ditolak',
                 'confirmed_by' => Auth::guard('admin')->id(),
                 'confirmed_at' => now(),
             ]);

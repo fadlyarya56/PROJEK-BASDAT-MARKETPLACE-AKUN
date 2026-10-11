@@ -23,7 +23,7 @@ class AccountDelivered extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Akun ' . $this->account->game->name . ' - KESHOZONE',
+            subject: 'Akun '.$this->account->game->name.' - KESHOZONE',
         );
     }
 
@@ -53,12 +53,12 @@ class AccountDelivered extends Mailable
         $template = $game->email_template ?: $this->fallbackTemplate();
 
         return strtr($template, [
-            '{game_name}'    => $game->name,
-            '{email}'        => $this->account->account_email,
-            '{email_pw}'     => $this->account->email_password,
-            '{game_pw}'      => $this->account->game_password,
-            '{webmail_url}'  => $game->webmail_url ?? '-',
-            '{guide_url}'    => $game->guide_url ?? '-',
+            '{game_name}' => $game->name,
+            '{email}' => $this->account->account_email,
+            '{email_pw}' => $this->account->email_password,
+            '{game_pw}' => $this->account->game_password,
+            '{webmail_url}' => $game->webmail_url ?? '-',
+            '{guide_url}' => $game->guide_url ?? '-',
         ]);
     }
 
@@ -67,7 +67,7 @@ class AccountDelivered extends Mailable
      */
     private function fallbackTemplate(): string
     {
-        return <<<TEXT
+        return <<<'TEXT'
 AKUN {game_name} BY AKUNKU
 
 NOTE:  SEBELUM LOGIN KE DALAM GAME, AMANKAN AKUN TERLEBIH DAHULU (MENGGANTI GMAIL & PASSWORD) DENGAN PANDUAN YANG TELAH DIKIRIMKAN

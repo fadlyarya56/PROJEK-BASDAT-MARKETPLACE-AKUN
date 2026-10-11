@@ -16,7 +16,7 @@ class PaymentController extends Controller
     public function store(Request $request, $order_id)
     {
         $validated = $request->validate([
-            'method'      => 'required|string|max:255', // misal: "Transfer BCA", "QRIS"
+            'method' => 'required|string|max:255', // misal: "Transfer BCA", "QRIS"
             'proof_image' => 'required|image|max:4096',  // max 4MB
         ]);
 
@@ -32,10 +32,10 @@ class PaymentController extends Controller
 
         DB::transaction(function () use ($order, $validated, $path) {
             Payment::create([
-                'order_id'    => $order->order_id,
-                'method'      => $validated['method'],
+                'order_id' => $order->order_id,
+                'method' => $validated['method'],
                 'proof_image' => $path,
-                'status'      => 'menunggu',
+                'status' => 'menunggu',
             ]);
 
             $order->update(['status' => 'menunggu_konfirmasi']);
