@@ -7,13 +7,40 @@ use App\Http\Controllers\Admin\PaymentAdminController;
 use App\Http\Controllers\PaymentController;
 use App\Models\Account;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
 // Sisi buyer (tetap dipertahankan)
 Route::post('/orders/{order_id}/payment', [PaymentController::class, 'store']);
 
-// Sisi admin
+// =============================================
+// Sisi admin — Frontend Inertia (halaman HTML)
+// =============================================
+Route::prefix('admin')->group(function () {
+
+    // Halaman Login (publik, bisa diakses tanpa login)
+    Route::get('/login', function () {
+        // Kalau sudah login, langsung redirect ke dashboard
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin');
+        }
+        return Inertia::render('admin/Login');
+    })->name('admin.login');
+
+    // Halaman-halaman yang butuh login
+    Route::middleware('auth:admin')->group(function () {
+        // Dashboard
+        Route::get('/', function () {
+            return Inertia::render('admin/Dashboard');
+        })->name('admin.dashboard');
+    });
+});
+
+// =============================================
+// Sisi admin — API JSON (dipanggil via fetch)
+// =============================================
 Route::prefix('admin')->group(function () {
     // 1. Route PUBLIK (Bisa diakses tanpa login)
     Route::post('/login', [AdminAuthController::class, 'login']);
@@ -61,8 +88,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/accounts', [AccountAdminController::class, 'index']);
         Route::post('/accounts', [AccountAdminController::class, 'store']);
         Route::get('/accounts/{account_id}', [AccountAdminController::class, 'show']);
-        Route::post('/accounts/{account_id}', [AccountAdminController::class, 'update']); // Mendukung multipart/form-data upload gambar
-        Route::put('/accounts/{account_id}', [AccountAdminController::class, 'update']);
+        Route::match(['post', 'put'], '/accounts/{account_id}', [AccountAdminController::class, 'update']); // Mendukung multipart/form-data upload gambar
         Route::delete('/accounts/{account_id}', [AccountAdminController::class, 'destroy']);
 
         // Kelola Game & Template Email

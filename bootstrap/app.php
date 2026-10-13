@@ -18,6 +18,14 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
         ]);
+
+        // Redirect admin guard ke /admin/login, bukan /login
+        $middleware->redirectGuestsTo(function (Request $request) {
+            if ($request->is('admin/*') || $request->is('admin')) {
+                return '/admin/login';
+            }
+            return '/login';
+        });
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->shouldRenderJsonWhen(
