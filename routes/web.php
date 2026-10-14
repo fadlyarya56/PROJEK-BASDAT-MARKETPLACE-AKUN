@@ -8,6 +8,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\OrderController;
 use App\Models\Account;
 use App\Models\Payment;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,14 +36,37 @@ Route::post('/orders/{order_id}/payment', [OrderController::class, 'storePayment
 
 /*
 |--------------------------------------------------------------------------
-| Sisi Admin (Payment, Catalog Admin, & Settings)
+| Sisi Admin — Halaman Web (Inertia Frontend)
 |--------------------------------------------------------------------------
 */
 Route::prefix('admin')->group(function () {
-    // 1. Route PUBLIK (Bisa diakses tanpa login)
+    // Halaman Login Admin (Publik)
+    Route::get('/login', function () {
+        if (Auth::guard('admin')->check()) {
+            return redirect('/admin');
+        }
+
+        return Inertia::render('admin/Login');
+    })->name('admin.login');
+
+    // Halaman Dashboard Admin (Wajib Login)
+    Route::middleware('auth:admin')->group(function () {
+        Route::get('/', function () {
+            return Inertia::render('admin/Dashboard');
+        })->name('admin.dashboard');
+    });
+});
+
+/*
+|--------------------------------------------------------------------------
+| Sisi Admin — API Endpoints (JSON / Backend Logic)
+|--------------------------------------------------------------------------
+*/
+Route::prefix('admin')->group(function () {
+    // 1. Route Publik API
     Route::post('/login', [AdminAuthController::class, 'login']);
 
-    // 2. Route PRIVATE (Wajib login auth:admin)
+    // 2. Route Private API (Wajib login auth:admin)
     Route::middleware('auth:admin')->group(function () {
         // Auth Admin
         Route::get('/me', [AdminAuthController::class, 'me']);
@@ -85,8 +109,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/accounts', [AccountAdminController::class, 'index']);
         Route::post('/accounts', [AccountAdminController::class, 'store']);
         Route::get('/accounts/{account_id}', [AccountAdminController::class, 'show']);
-        Route::post('/accounts/{account_id}', [AccountAdminController::class, 'update']);
-        Route::put('/accounts/{account_id}', [AccountAdminController::class, 'update']);
+        Route::match(['post', 'put'], '/accounts/{account_id}', [AccountAdminController::class, 'update']);
         Route::delete('/accounts/{account_id}', [AccountAdminController::class, 'destroy']);
 
         // Kelola Game & Template Email
