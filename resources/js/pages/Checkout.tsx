@@ -12,26 +12,28 @@ interface AccountData {
     };
 }
 
-interface CheckoutProps {
-    account?: AccountData;
+interface OrderData {
+    order_id: number;
+    status: string;
 }
 
-export default function Checkout({ account }: CheckoutProps) {
+interface CheckoutProps {
+    account?: AccountData;
+    order?: OrderData;
+}
+
+export default function Checkout({ account, order }: CheckoutProps) {
     const [selectedMethod, setSelectedMethod] = useState<'qris' | 'bank' | 'e-wallet'>('qris');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
 
-    useEffect(() => {
-        const urlParams = new URLSearchParams(window.location.search);
-        const accId = urlParams.get('account_id');
-        if (accId) {
-            setData('account_id', Number(accId));
-        }
-    }, []);
+    // Mengambil order_id atau account_id dari URL query jika ada
+    const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
+    const currentOrderId = order?.order_id || urlParams.get('order_id') || account?.account_id || 36;
 
+    // Form Inertia disesuaikan persis dengan kebutuhan field backend
     const { data, setData, post, processing, errors } = useForm({
-        account_id: account?.account_id || 36,
         delivery_email: '',
-        payment_method: 'qris',
+        method: 'QRIS',
         proof_image: null as File | null,
     });
 
@@ -45,8 +47,13 @@ export default function Checkout({ account }: CheckoutProps) {
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        post('/checkout', {
+
+        // Mengirimkan request ke Endpoint: POST /orders/{order_id}/payment (multipart/form-data)
+        post(`/orders/${currentOrderId}/payment`, {
             forceFormData: true,
+            onSuccess: () => {
+                alert('Bukti transfer berhasil diunggah! Status pesanan kini menunggu konfirmasi.');
+            },
         });
     };
 
@@ -75,10 +82,10 @@ export default function Checkout({ account }: CheckoutProps) {
                         {/* BAGIAN KIRI: Form Pengisian (Container Putih Bersih) */}
                         <div className="lg:col-span-7 bg-white border border-dropbox-border rounded-2xl p-6 sm:p-7 space-y-6 shadow-2xs">
                             <h2 className="text-sm font-bold text-dropbox-text border-b border-dropbox-border pb-3">
-                                Informasi Pembayaran & Pengiriman
+                                Informasi Pembayaran &amp; Pengiriman
                             </h2>
 
-                            {/* Form Input Email */}
+                            {/* 1. Form Input Email (delivery_email) */}
                             <div className="space-y-2">
                                 <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
                                     Email Pengiriman <span className="text-rose-500">*</span>
@@ -96,28 +103,29 @@ export default function Checkout({ account }: CheckoutProps) {
                                 )}
                             </div>
 
-                            {/* Pilih Metode Pembayaran */}
+                            {/* 2. Pilih Metode Pembayaran (method) */}
                             <div className="space-y-3">
                                 <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
                                     Metode Pembayaran
                                 </label>
                                 
                                 <div className="grid grid-cols-3 gap-2.5">
-                                    {(['qris', 'bank', 'e-wallet'] as const).map((method) => (
+                                    {(['qris', 'bank', 'e-wallet'] as const).map((m) => (
                                         <button
                                             type="button"
-                                            key={method}
+                                            key={m}
                                             onClick={() => {
-                                                setSelectedMethod(method);
-                                                setData('payment_method', method === 'qris' ? 'QRIS' : method === 'bank' ? 'Transfer Bank BCA' : 'E-Wallet DANA');
+                                                setSelectedMethod(m);
+                                                const methodName = m === 'qris' ? 'QRIS' : m === 'bank' ? 'Transfer BCA' : 'E-Wallet';
+                                                setData('method', methodName);
                                             }}
                                             className={`py-2.5 px-2 rounded-xl border text-xs transition text-center ${
-                                                selectedMethod === method
+                                                selectedMethod === m
                                                     ? 'bg-dropbox-accent text-white border-dropbox-accent font-semibold shadow-2xs'
                                                     : 'bg-dropbox-bg text-dropbox-text border-dropbox-border font-medium hover:border-dropbox-text/30'
                                             }`}
                                         >
-                                            {method === 'qris' ? 'QRIS' : method === 'bank' ? 'Bank BCA' : 'E-Wallet'}
+                                            {m === 'qris' ? 'QRIS' : m === 'bank' ? 'Bank BCA' : 'E-Wallet'}
                                         </button>
                                     ))}
                                 </div>
@@ -149,7 +157,7 @@ export default function Checkout({ account }: CheckoutProps) {
                                 </div>
                             </div>
 
-                            {/* Upload Bukti Transfer */}
+                            {/* 3. Upload Bukti Transfer (proof_image) */}
                             <div className="space-y-2">
                                 <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
                                     Upload Bukti Transfer <span className="text-rose-500">*</span>
@@ -157,11 +165,14 @@ export default function Checkout({ account }: CheckoutProps) {
                                 <div className="bg-dropbox-bg border border-dropbox-border rounded-xl p-3">
                                     <input
                                         type="file"
-                                        accept="image/*"
+                                        accept="image/jpeg,image/png,image/jpg"
                                         required
                                         onChange={handleImageChange}
                                         className="w-full text-xs text-dropbox-muted file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-dropbox-text file:text-white hover:file:bg-black cursor-pointer font-normal"
                                     />
+                                    {errors.proof_image && (
+                                        <p className="text-xs text-rose-500 mt-1 font-normal">{errors.proof_image}</p>
+                                    )}
                                     {previewImage && (
                                         <div className="mt-3 w-24 aspect-square rounded-lg overflow-hidden border border-dropbox-border">
                                             <img src={previewImage} alt="Bukti Transfer" className="w-full h-full object-cover" />
@@ -171,7 +182,7 @@ export default function Checkout({ account }: CheckoutProps) {
                             </div>
 
                             <div className="pt-2">
-                                <Link href="/" className="text-xs font-medium text-dropbox-muted hover:text-dropbox-text transition">
+                                <Link href="/katalog" className="text-xs font-medium text-dropbox-muted hover:text-dropbox-text transition">
                                     &larr; Batal dan Kembali ke Katalog
                                 </Link>
                             </div>
@@ -201,7 +212,7 @@ export default function Checkout({ account }: CheckoutProps) {
                                         {account?.game?.name || 'GAME'}
                                     </span>
                                     <h3 className="font-bold text-dropbox-text text-sm truncate">
-                                        {account?.title || `Akun Game #${account?.account_id || data.account_id}`}
+                                        {account?.title || `Akun Game #${account?.account_id || currentOrderId}`}
                                     </h3>
                                     <span className="text-xs font-semibold text-dropbox-text block">
                                         {formatRupiah(Number(account?.price || 150000))}

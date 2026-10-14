@@ -71,5 +71,33 @@ class OrderController extends Controller
     // Redirect langsung ke halaman Lacak Pesanan dengan memasukkan order_id
     return redirect()->to('/order-status?search=ORD-' . $order->order_id);
 }
+public function storePayment(Request $request, $order_id)
+{
+    // 1. Validasi input
+    $request->validate([
+        'delivery_email' => 'required|email',
+        'method'         => 'required|string',
+        'proof_image'    => 'required|image|mimes:jpeg,png,jpg|max:4096',
+    ]);
+
+    // 2. Simpan gambar bukti transfer
+    $path = $request->file('proof_image')->store('payments', 'public');
+
+    // 3. Simpan data ke tabel Payment
+    Payment::updateOrCreate(
+        ['order_id' => $order_id],
+        ['method' => $request->input('method'), 'proof_image' => $path, 'status' => 'menunggu']
+    );
+
+    // 4. Update status Order & email
+    $order = Order::findOrFail($order_id);
+    $order->update([
+        'delivery_email' => $request->delivery_email,
+        'status'         => 'menunggu_konfirmasi',
+    ]);
+
+    return redirect()->to('/order-status?search=ORD-' . $order_id);
+}
+
 }
 
