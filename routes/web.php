@@ -4,16 +4,40 @@ use App\Http\Controllers\Admin\AccountAdminController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\GameAdminController;
 use App\Http\Controllers\Admin\PaymentAdminController;
-use App\Http\Controllers\PaymentController;
+use App\Http\Controllers\CatalogController;
+use App\Http\Controllers\OrderController;
 use App\Models\Account;
 use App\Models\Payment;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 
-// Sisi buyer (tetap dipertahankan)
-Route::post('/orders/{order_id}/payment', [PaymentController::class, 'store']);
+/*
+|--------------------------------------------------------------------------
+| Sisi Pembeli (Buyer & Catalog)
+|--------------------------------------------------------------------------
+*/
+Route::get('/', function () {
+    return Inertia::render('Home');
+});
 
-// Sisi admin
+Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog');
+
+Route::get('/checkout', function () {
+    return Inertia::render('Checkout');
+});
+
+Route::post('/checkout', [OrderController::class, 'store']);
+
+Route::get('/order-status', [OrderController::class, 'status']);
+
+Route::post('/orders/{order_id}/payment', [OrderController::class, 'storePayment']);
+
+/*
+|--------------------------------------------------------------------------
+| Sisi Admin (Payment, Catalog Admin, & Settings)
+|--------------------------------------------------------------------------
+*/
 Route::prefix('admin')->group(function () {
     // 1. Route PUBLIK (Bisa diakses tanpa login)
     Route::post('/login', [AdminAuthController::class, 'login']);
@@ -61,7 +85,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/accounts', [AccountAdminController::class, 'index']);
         Route::post('/accounts', [AccountAdminController::class, 'store']);
         Route::get('/accounts/{account_id}', [AccountAdminController::class, 'show']);
-        Route::post('/accounts/{account_id}', [AccountAdminController::class, 'update']); // Mendukung multipart/form-data upload gambar
+        Route::post('/accounts/{account_id}', [AccountAdminController::class, 'update']);
         Route::put('/accounts/{account_id}', [AccountAdminController::class, 'update']);
         Route::delete('/accounts/{account_id}', [AccountAdminController::class, 'destroy']);
 
