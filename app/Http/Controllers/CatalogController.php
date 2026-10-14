@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Game;
 use App\Models\Account;
+use App\Models\Game;
 use Inertia\Inertia;
 
 class CatalogController extends Controller

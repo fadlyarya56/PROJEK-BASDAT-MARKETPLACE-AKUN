@@ -1,12 +1,13 @@
 <?php
 
 namespace App\Http\Controllers;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
+
+use App\Models\Account;
 use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Payment;
-use App\Models\Account;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 class OrderController extends Controller
 {
@@ -48,7 +49,7 @@ class OrderController extends Controller
         // 1. Buat atau cari data Buyer berdasarkan email
         $buyer = Buyer::firstOrCreate(
             ['email' => $request->delivery_email],
-            ['name' => 'Pembeli ' . rand(100, 999)]
+            ['name' => 'Pembeli '.rand(100, 999)]
         );
 
         // 2. Simpan Data Pesanan Baru
@@ -62,50 +63,49 @@ class OrderController extends Controller
         // Lock akun menjadi 'tertunda' agar tidak bisa di-checkout pembeli lain
         Account::where('account_id', $request->account_id)->update(['status' => 'tertunda']);
 
-    // 3. Upload Gambar Bukti Pembayaran (jika ada)
-    $imagePath = null;
-    if ($request->hasFile('proof_image')) {
-        $imagePath = $request->file('proof_image')->store('payments', 'public');
+        // 3. Upload Gambar Bukti Pembayaran (jika ada)
+        $imagePath = null;
+        if ($request->hasFile('proof_image')) {
+            $imagePath = $request->file('proof_image')->store('payments', 'public');
+        }
+
+        // 4. Simpan Data Pembayaran
+        Payment::create([
+            'order_id' => $order->order_id,
+            'method' => $request->payment_method,
+            'proof_image' => $imagePath,
+            'status' => 'menunggu',
+        ]);
+
+        // Redirect langsung ke halaman Lacak Pesanan dengan memasukkan order_id
+        return redirect()->to('/order-status?search=ORD-'.$order->order_id);
     }
 
-    // 4. Simpan Data Pembayaran
-    Payment::create([
-        'order_id' => $order->order_id,
-        'method' => $request->payment_method,
-        'proof_image' => $imagePath,
-        'status' => 'menunggu',
-    ]);
+    public function storePayment(Request $request, $order_id)
+    {
+        // 1. Validasi input
+        $request->validate([
+            'delivery_email' => 'required|email',
+            'method' => 'required|string',
+            'proof_image' => 'required|image|mimes:jpeg,png,jpg|max:4096',
+        ]);
 
-    // Redirect langsung ke halaman Lacak Pesanan dengan memasukkan order_id
-    return redirect()->to('/order-status?search=ORD-' . $order->order_id);
+        // 2. Simpan gambar bukti transfer
+        $path = $request->file('proof_image')->store('payments', 'public');
+
+        // 3. Simpan data ke tabel Payment
+        Payment::updateOrCreate(
+            ['order_id' => $order_id],
+            ['method' => $request->input('method'), 'proof_image' => $path, 'status' => 'menunggu']
+        );
+
+        // 4. Update status Order & email
+        $order = Order::findOrFail($order_id);
+        $order->update([
+            'delivery_email' => $request->delivery_email,
+            'status' => 'menunggu_konfirmasi',
+        ]);
+
+        return redirect()->to('/order-status?search=ORD-'.$order_id);
+    }
 }
-public function storePayment(Request $request, $order_id)
-{
-    // 1. Validasi input
-    $request->validate([
-        'delivery_email' => 'required|email',
-        'method'         => 'required|string',
-        'proof_image'    => 'required|image|mimes:jpeg,png,jpg|max:4096',
-    ]);
-
-    // 2. Simpan gambar bukti transfer
-    $path = $request->file('proof_image')->store('payments', 'public');
-
-    // 3. Simpan data ke tabel Payment
-    Payment::updateOrCreate(
-        ['order_id' => $order_id],
-        ['method' => $request->input('method'), 'proof_image' => $path, 'status' => 'menunggu']
-    );
-
-    // 4. Update status Order & email
-    $order = Order::findOrFail($order_id);
-    $order->update([
-        'delivery_email' => $request->delivery_email,
-        'status'         => 'menunggu_konfirmasi',
-    ]);
-
-    return redirect()->to('/order-status?search=ORD-' . $order_id);
-}
-
-}
-
