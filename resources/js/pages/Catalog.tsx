@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Head } from '@inertiajs/react';
 import MainLayout from '@/Layouts/MainLayout';
 import GameFilter, { Game } from '@/Components/GameFilter';
 import AccountCard, { Account } from '@/Components/AccountCard';
@@ -92,6 +93,7 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
 
     return (
         <MainLayout>
+            <Head title="Katalog Akun Game - TempatAkun" />
             <div className="space-y-8 py-2">
                 {/* Header Judul Halaman Katalog Gamer Style */}
                 <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-6 sm:p-8 relative overflow-hidden">

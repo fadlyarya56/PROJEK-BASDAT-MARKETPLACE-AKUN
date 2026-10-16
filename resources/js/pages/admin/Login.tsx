@@ -43,7 +43,7 @@ export default function AdminLogin() {
 
     return (
         <>
-            <Head title="Masuk Admin - AKUNKU Store" />
+            <Head title="Masuk Admin - TempatAkun" />
 
             <div className="min-h-screen bg-[#0B0F19] text-dropbox-text font-sans antialiased flex items-center justify-center p-4 selection:bg-blue-600 selection:text-white relative overflow-hidden">
                 {/* Background Glow */}
@@ -54,8 +54,11 @@ export default function AdminLogin() {
                     {/* Header Brand */}
                     <div className="space-y-2 text-center">
                         <div className="inline-flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white text-sm font-black shadow-md shadow-blue-600/30">
+                                T
+                            </div>
                             <span className="text-2xl font-black tracking-tight text-white">
-                                AKUN<span className="text-dropbox-accent">KU</span>
+                                TEMPAT<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">AKUN</span>
                             </span>
                             <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-950/80 border border-blue-800/80 text-blue-400">
                                 INTERNAL

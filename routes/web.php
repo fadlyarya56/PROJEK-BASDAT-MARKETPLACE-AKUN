@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\AccountAdminController;
 use App\Http\Controllers\Admin\AdminAuthController;
 use App\Http\Controllers\Admin\GameAdminController;
+use App\Http\Controllers\Admin\OrderAdminController;
 use App\Http\Controllers\Admin\PaymentAdminController;
 use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\OrderController;
@@ -125,16 +126,30 @@ Route::prefix('admin')->group(function () {
             ]);
         });
 
-        Route::get('/status-logs', function () {
-            return response()->json(
-                DB::table('status_logs')
-                    ->join('accounts', 'status_logs.account_id', '=', 'accounts.account_id')
-                    ->select('status_logs.*', 'accounts.title as account_title')
-                    ->latest('changed_at')
-                    ->limit(50)
-                    ->get()
-            );
+        Route::get('/status-logs', function (Request $request) {
+            $query = DB::table('status_logs')
+                ->join('accounts', 'status_logs.account_id', '=', 'accounts.account_id')
+                ->select('status_logs.*', 'accounts.title as account_title')
+                ->latest('changed_at');
+
+            if ($request->filled('search')) {
+                $search = trim((string) $request->query('search'));
+                $query->where(function ($q) use ($search) {
+                    $numeric = preg_replace('/[^0-9]/', '', $search);
+                    if (! empty($numeric)) {
+                        $q->orWhere('status_logs.account_id', $numeric);
+                    }
+                    $q->orWhere('accounts.title', 'like', "%{$search}%")
+                        ->orWhere('status_logs.old_status', 'like', "%{$search}%")
+                        ->orWhere('status_logs.new_status', 'like', "%{$search}%");
+                });
+            }
+
+            return response()->json($query->paginate(15));
         });
+
+        // Riwayat Pesanan & Audit Trail
+        Route::get('/orders', [OrderAdminController::class, 'index']);
 
         // Verifikasi Pembayaran & Kirim Ulang Email
         Route::get('/payments', [PaymentAdminController::class, 'index']);

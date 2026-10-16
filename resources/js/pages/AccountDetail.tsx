@@ -47,22 +47,22 @@ export default function AccountDetail({ account, relatedAccounts = [] }: Account
 
     return (
         <MainLayout>
-            <Head title={`${account.title || `Akun #${account.account_id}`} - AKUNKU Store`} />
+            <Head title={`${account.title || `Akun #${account.account_id}`} - TempatAkun`} />
 
-            <div className="space-y-8 py-2">
-                {/* Breadcrumbs Navigasi */}
-                <nav className="flex items-center space-x-2 text-xs text-dropbox-muted">
-                    <Link href="/" className="hover:text-white transition">Home</Link>
-                    <span>/</span>
-                    <Link href="/katalog" className="hover:text-white transition">Katalog</Link>
+            <div className="space-y-6 sm:space-y-8 py-2 pb-24 lg:pb-2">
+                {/* Breadcrumbs Navigasi Ramah Mobile */}
+                <nav className="flex items-center space-x-2 text-xs text-dropbox-muted overflow-x-auto whitespace-nowrap pb-1 scrollbar-none">
+                    <Link href="/" className="hover:text-white transition flex-shrink-0">Home</Link>
+                    <span className="flex-shrink-0">/</span>
+                    <Link href="/katalog" className="hover:text-white transition flex-shrink-0">Katalog</Link>
                     {account.game?.name && (
                         <>
-                            <span>/</span>
-                            <span className="text-dropbox-muted">{account.game.name}</span>
+                            <span className="flex-shrink-0">/</span>
+                            <span className="text-dropbox-muted flex-shrink-0">{account.game.name}</span>
                         </>
                     )}
-                    <span>/</span>
-                    <span className="text-white font-medium truncate max-w-[200px]">
+                    <span className="flex-shrink-0">/</span>
+                    <span className="text-white font-medium truncate max-w-[180px] sm:max-w-xs">
                         {account.title || `Akun #${account.account_id}`}
                     </span>
                 </nav>
@@ -203,13 +203,11 @@ export default function AccountDetail({ account, relatedAccounts = [] }: Account
                                              HOT ITEM
                                          </span>
                                      )}
-                                     <span className={`text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border ${
-                                         account.status === 'tersedia'
-                                             ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60'
-                                             : 'bg-amber-950/80 text-amber-400 border-amber-700/60'
-                                     }`}>
-                                         {account.status}
-                                     </span>
+                                     {account.status && account.status !== 'tersedia' && (
+                                         <span className="text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider border bg-amber-950/80 text-amber-400 border-amber-700/60">
+                                             {account.status}
+                                         </span>
+                                     )}
                                  </div>
 
                                  {/* Judul Akun */}
@@ -258,7 +256,7 @@ export default function AccountDetail({ account, relatedAccounts = [] }: Account
 
                                  {/* Tombol Tanya CS Seputar Akun Ini */}
                                  <a
-                                     href={`https://wa.me/6281234567890?text=Halo%20Admin%20GameStore%2C%20saya%20tertarik%20dengan%20Akun%20ID%20%23${account.account_id}%20(${encodeURIComponent(account.title || 'Akun Game')})%20seharga%20${encodeURIComponent(formatRupiah(Number(account.price)))}.%20Apakah%20masih%20tersedia%3F`}
+                                     href={`https://wa.me/6285601133945?text=Halo%20Admin%20TempatAkun%2C%20saya%20tertarik%20dengan%20Akun%20ID%20%23${account.account_id}%20(${encodeURIComponent(account.title || 'Akun Game')})%20seharga%20${encodeURIComponent(formatRupiah(Number(account.price)))}.%20Apakah%20masih%20tersedia%3F`}
                                      target="_blank"
                                      rel="noopener noreferrer"
                                      className="w-full bg-[#182033] hover:bg-[#222c44] text-slate-200 font-bold text-xs py-3 rounded-2xl transition flex items-center justify-center gap-2 border border-dropbox-border"
@@ -305,6 +303,29 @@ export default function AccountDetail({ account, relatedAccounts = [] }: Account
                             ))}
                         </div>
                     </div>
+                )}
+            </div>
+
+            {/* Mobile Sticky Buy Bar (Tampil paten di atas bottom navigation bar HP, layer teratas di z-40) */}
+            <div className="lg:hidden fixed bottom-14 left-0 right-0 z-40 bg-[#0E1422]/95 backdrop-blur-md border-t border-dropbox-border px-4 py-2.5 flex items-center justify-between shadow-2xl">
+                <div>
+                    <span className="text-[10px] text-dropbox-muted block font-medium">Total Harga</span>
+                    <span className="text-base font-black text-blue-400">
+                        {formatRupiah(Number(account.price))}
+                    </span>
+                </div>
+                {account.status === 'tersedia' ? (
+                    <Link
+                        href={`/checkout?account_id=${account.account_id}`}
+                        className="bg-dropbox-accent hover:bg-blue-600 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl transition shadow-md shadow-blue-900/40 border border-blue-400/30 flex items-center gap-1.5"
+                    >
+                        <span>Beli Sekarang</span>
+                        <span>&rarr;</span>
+                    </Link>
+                ) : (
+                    <span className="text-xs font-bold text-amber-400 px-3 py-1.5 bg-amber-950/80 rounded-xl border border-amber-800/60 capitalize">
+                        {account.status}
+                    </span>
                 )}
             </div>
 

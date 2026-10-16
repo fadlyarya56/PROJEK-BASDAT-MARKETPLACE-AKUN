@@ -78,9 +78,6 @@ export default function AccountCard({ account }: AccountCardProps) {
                             </div>
                         )}
 
-                        {/* Gradient Overlay saat Hover */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-[#111726] via-transparent to-transparent opacity-60 pointer-events-none"></div>
-
                         {/* Badge Hot Item (Jika dipilih admin) */}
                         {account.is_hot && (
                             <span className="absolute top-2.5 left-2.5 bg-gradient-to-r from-amber-500 to-rose-500 text-white text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-md uppercase tracking-wider">
@@ -88,42 +85,40 @@ export default function AccountCard({ account }: AccountCardProps) {
                             </span>
                         )}
 
-                        {/* Badge Status */}
-                        <span className={`absolute top-2.5 right-2.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm uppercase tracking-wider ${
-                            account.status === 'tersedia'
-                                ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60'
-                                : 'bg-amber-950/80 text-amber-400 border-amber-700/60'
-                        }`}>
-                            {account.status}
-                        </span>
+                        {/* Badge Status (Hanya tampil jika bukan 'tersedia') */}
+                        {account.status && account.status !== 'tersedia' && (
+                            <span className="absolute top-2.5 right-2.5 text-[10px] font-bold px-2.5 py-0.5 rounded-full border shadow-sm uppercase tracking-wider bg-amber-950/80 text-amber-400 border-amber-700/60">
+                                {account.status}
+                            </span>
+                        )}
                     </Link>
 
                     {/* Info Produk: Hanya Kategori Game & Nama Akun */}
-                    <div className="p-4 pb-2 space-y-1">
+                    <div className="p-3 sm:p-4 pb-1.5 sm:pb-2 space-y-1">
                         {account.game?.name && (
-                            <span className="text-[10px] font-bold text-dropbox-accent uppercase tracking-wider block">
+                            <span className="text-[9px] sm:text-[10px] font-bold text-dropbox-accent uppercase tracking-wider block">
                                 {account.game.name}
                             </span>
                         )}
                         <Link href={`/katalog/${account.account_id}`}>
-                            <h3 className="font-bold text-white text-sm line-clamp-2 group-hover:text-blue-400 transition leading-snug" title={account.title}>
+                            <h3 className="font-bold text-white text-xs sm:text-sm line-clamp-2 group-hover:text-blue-400 transition leading-snug" title={account.title}>
                                 {account.title || `Akun Game #${account.account_id}`}
                             </h3>
                         </Link>
                     </div>
 
                     {/* Container Bawah: Harga Selalu di Atas Tombol Lihat Detail */}
-                    <div className="mt-auto p-4 pt-2 relative z-10 space-y-2.5">
-                        <div className="pt-2 border-t border-dropbox-border/40">
-                            <span className="text-[10px] text-dropbox-muted block font-medium">Harga</span>
-                            <span className="text-base font-extrabold text-blue-400">
+                    <div className="mt-auto p-3 sm:p-4 pt-1 sm:pt-2 relative z-10 space-y-2 sm:space-y-2.5">
+                        <div className="pt-1.5 sm:pt-2 border-t border-dropbox-border/40">
+                            <span className="text-[9px] sm:text-[10px] text-dropbox-muted block font-medium">Harga</span>
+                            <span className="text-sm sm:text-base font-black text-blue-400">
                                 {formatRupiah(Number(account.price))}
                             </span>
                         </div>
 
                         <Link
                             href={`/katalog/${account.account_id}`}
-                            className="w-full bg-[#182033] group-hover:bg-dropbox-accent text-white font-bold text-xs py-2.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 border border-dropbox-border group-hover:border-blue-400/50 shadow-sm group-hover:shadow-md group-hover:shadow-blue-600/30"
+                            className="w-full bg-[#182033] group-hover:bg-dropbox-accent text-white font-bold text-[11px] sm:text-xs py-2 sm:py-2.5 rounded-xl transition-all duration-300 flex items-center justify-center gap-1.5 border border-dropbox-border group-hover:border-blue-400/50 shadow-sm group-hover:shadow-md group-hover:shadow-blue-600/30"
                         >
                             <span>Lihat Detail</span>
                             <span className="text-sm group-hover:translate-x-1 transition-transform duration-300">&rarr;</span>

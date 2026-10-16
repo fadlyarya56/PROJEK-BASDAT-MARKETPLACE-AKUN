@@ -9,11 +9,17 @@ export default function Footer() {
                 <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-start">
                     {/* Brand & About (5 cols) */}
                     <div className="md:col-span-5 space-y-4">
-                        <Link href="/" className="text-2xl font-black tracking-tight text-white inline-block">
-                            AKUN<span className="text-dropbox-accent">KU</span>
+                        <Link href="/" className="text-2xl font-black tracking-tight text-white inline-flex items-center gap-2">
+                            <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-600/30">
+                                T
+                            </div>
+                            <span>TEMPAT<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">AKUN</span></span>
+                            <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/80 text-blue-400">
+                                .MY.ID
+                            </span>
                         </Link>
                         <p className="text-xs leading-relaxed max-w-sm">
-                            Platform marketplace jual beli akun game nomor satu di Indonesia. 
+                            Platform marketplace jual beli akun game terpercaya dan bergaransi di Indonesia. 
                             Setiap akun melalui tahap verifikasi keamanan, garansi anti hack-back 100%, 
                             dan proses pengiriman otomatis 24 jam nonstop.
                         </p>
@@ -65,7 +71,7 @@ export default function Footer() {
                         <div className="flex flex-wrap items-center gap-2.5 pt-1">
                             {/* WhatsApp */}
                             <a
-                                href="https://wa.me/6281234567890"
+                                href="https://wa.me/6285601133945?text=Halo%20Admin%20TempatAkun%2C%20saya%20butuh%20bantuan."
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="WhatsApp Customer Service"
@@ -76,7 +82,7 @@ export default function Footer() {
 
                             {/* Discord */}
                             <a
-                                href="https://discord.gg/gamestore"
+                                href="https://discord.gg/tempatakun"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Server Discord Komunitas"
@@ -87,7 +93,7 @@ export default function Footer() {
 
                             {/* Instagram */}
                             <a
-                                href="https://instagram.com/gamestore_id"
+                                href="https://instagram.com/tempatakun_id"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="Instagram Resmi"
@@ -98,7 +104,7 @@ export default function Footer() {
 
                             {/* TikTok */}
                             <a
-                                href="https://tiktok.com/@gamestore_id"
+                                href="https://tiktok.com/@tempatakun_id"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="TikTok Gaming Highlights"
@@ -109,7 +115,7 @@ export default function Footer() {
 
                             {/* YouTube */}
                             <a
-                                href="https://youtube.com/@gamestore_id"
+                                href="https://youtube.com/@tempatakun_id"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 title="YouTube Channel"
@@ -121,7 +127,7 @@ export default function Footer() {
 
                         <div className="text-[11px] space-y-1 pt-1">
                             <p className="text-white font-medium">Jam Layanan CS: <span className="text-emerald-400">24 Jam / 7 Hari</span></p>
-                            <p className="text-dropbox-muted">Email: support@akunku.com</p>
+                            <p className="text-dropbox-muted">Email: support@tempatakun.my.id</p>
                         </div>
                     </div>
                 </div>
@@ -145,7 +151,7 @@ export default function Footer() {
 
                 {/* Copyright Bawah */}
                 <div className="pt-4 border-t border-dropbox-border/40 text-center text-[11px] text-dropbox-muted/70">
-                    <p>&copy; {new Date().getFullYear()} AKUNKU Marketplace. Seluruh hak cipta dilindungi undang-undang.</p>
+                    <p>&copy; {new Date().getFullYear()} TempatAkun.my.id. Seluruh hak cipta dilindungi undang-undang.</p>
                 </div>
             </div>
         </footer>

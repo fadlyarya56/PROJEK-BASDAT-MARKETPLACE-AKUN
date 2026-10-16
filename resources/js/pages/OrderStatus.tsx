@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import { Link, router } from '@inertiajs/react';
+import { Head, Link, router } from '@inertiajs/react';
 
 interface AccountData {
     account_id: number;
@@ -80,6 +80,7 @@ export default function OrderStatus({
 
     return (
         <MainLayout>
+            <Head title="Lacak Status Pesanan - TempatAkun" />
             <div className="max-w-3xl mx-auto space-y-8 py-4">
                 <div className="text-center space-y-2">
                     <span className="text-[11px] font-bold text-blue-400 bg-blue-950/80 border border-blue-800/60 px-3 py-1 rounded-full uppercase tracking-wider inline-block">

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/Layouts/MainLayout';
-import { Link } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 import { Account } from '@/Components/AccountCard';
 import { resolveStorageUrl } from '@/lib/utils';
 
@@ -94,10 +94,11 @@ export default function Home({ hotItems = [] }: HomeProps) {
 
     return (
         <MainLayout>
-            <div className="space-y-16 py-4">
+            <Head title="TempatAkun - Marketplace Jual Beli Akun Game Terpercaya" />
+            <div className="space-y-12 sm:space-y-16 py-3 sm:py-4">
                 
                 {/* 1. HERO SECTION - Dark Gamer Vibe dengan 1 Tombol CTA Saja */}
-                <section className="relative rounded-3xl bg-[#0F1524] border border-dropbox-border p-8 sm:p-14 overflow-hidden shadow-2xl">
+                <section className="relative rounded-3xl bg-[#0F1524] border border-dropbox-border p-6 sm:p-14 overflow-hidden shadow-2xl">
                     {/* Background Glow Mesh Gaming */}
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-[90px] pointer-events-none"></div>
@@ -171,22 +172,22 @@ export default function Home({ hotItems = [] }: HomeProps) {
                     </div>
 
                     {/* Banner Card Container */}
-                    <div className="relative rounded-3xl overflow-hidden border border-dropbox-border shadow-xl min-h-[170px] sm:min-h-[190px] flex items-center">
+                    <div className="relative rounded-3xl overflow-hidden border border-dropbox-border shadow-xl min-h-[220px] sm:min-h-[190px] flex items-center">
                         {banners.map((b, idx) => (
                             <div
                                 key={idx}
-                                className={`absolute inset-0 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-6 bg-gradient-to-r ${b.bgGradient} transition-opacity duration-700 ${
+                                className={`absolute inset-0 p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 bg-gradient-to-r ${b.bgGradient} transition-opacity duration-700 ${
                                     activeBanner === idx ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
                                 }`}
                             >
-                                <div className="space-y-2 max-w-xl">
+                                <div className="space-y-1.5 sm:space-y-2 max-w-xl">
                                     <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${b.badgeBg} inline-block`}>
                                         {b.tag}
                                     </span>
-                                    <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight">
+                                    <h3 className="text-base sm:text-2xl font-black text-white tracking-tight">
                                         {b.title}
                                     </h3>
-                                    <p className="text-xs text-slate-300 font-normal">
+                                    <p className="text-xs text-slate-300 font-normal line-clamp-2 sm:line-clamp-none">
                                         {b.subtitle}
                                     </p>
                                 </div>
@@ -198,7 +199,7 @@ export default function Home({ hotItems = [] }: HomeProps) {
                                     </div>
                                     <Link
                                         href={b.ctaLink}
-                                        className="bg-white hover:bg-slate-200 text-slate-900 font-bold text-xs px-5 py-3 rounded-full transition shadow-md whitespace-nowrap"
+                                        className="bg-white hover:bg-slate-200 text-slate-900 font-bold text-xs px-5 py-2.5 sm:py-3 rounded-full transition shadow-md whitespace-nowrap self-start sm:self-auto"
                                     >
                                         {b.ctaText} &rarr;
                                     </Link>
@@ -217,7 +218,7 @@ export default function Home({ hotItems = [] }: HomeProps) {
                     <div className="flex items-center justify-between">
                         <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                                <h2 className="text-lg font-black text-white tracking-tight uppercase">
+                                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
                                     Hot Items Minggu Ini
                                 </h2>
                                 <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-full uppercase">
@@ -259,7 +260,7 @@ export default function Home({ hotItems = [] }: HomeProps) {
                                 <div className="md:col-span-5">
                                     <Link 
                                         href={`/katalog/${activeHotAccount.account_id}`}
-                                        className="aspect-video sm:aspect-[4/5] bg-[#0A0D15] rounded-2xl overflow-hidden border border-dropbox-border relative block group"
+                                        className="aspect-[4/5] max-w-[280px] sm:max-w-none mx-auto sm:mx-0 bg-[#0A0D15] rounded-2xl overflow-hidden border border-dropbox-border relative block group"
                                     >
                                         <img
                                             src={

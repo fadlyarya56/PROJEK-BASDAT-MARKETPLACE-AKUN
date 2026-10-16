@@ -44,7 +44,7 @@ class PaymentAdminController extends Controller
             });
         }
 
-        $payments = $query->paginate(20);
+        $payments = $query->paginate(15);
 
         return response()->json($payments);
     }

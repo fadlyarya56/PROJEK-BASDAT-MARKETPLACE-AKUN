@@ -40,7 +40,7 @@ class AccountAdminController extends Controller
             });
         }
 
-        $accounts = $query->paginate(20);
+        $accounts = $query->paginate(15);
         $accounts->getCollection()->each(function ($account) {
             $account->makeVisible(['account_email', 'email_password', 'game_password']);
         });
@@ -271,20 +271,30 @@ class AccountAdminController extends Controller
     {
         $account = Account::findOrFail($account_id);
 
-        if ($account->status === 'terjual') {
+        $hasActiveOrder = $account->orders()->whereIn('status', ['menunggu', 'menunggu_konfirmasi'])->exists();
+        if ($hasActiveOrder) {
             return response()->json([
-                'message' => 'Akun yang sudah terjual tidak dapat dihapus untuk menjaga integritas data riwayat pesanan.',
+                'message' => 'Akun sedang dalam proses pesanan aktif (menunggu pembayaran/verifikasi). Harap selesaikan atau batalkan pesanan terlebih dahulu sebelum menghapus.',
             ], 422);
         }
 
-        if ($account->image_url && Storage::disk('public')->exists($account->image_url)) {
-            Storage::disk('public')->delete($account->image_url);
+        try {
+            $imagesToDelete = is_array($account->images) ? $account->images : ($account->image_url ? [$account->image_url] : []);
+            foreach ($imagesToDelete as $img) {
+                if ($img && Storage::disk('public')->exists($img)) {
+                    Storage::disk('public')->delete($img);
+                }
+            }
+
+            $account->delete();
+
+            return response()->json([
+                'message' => 'Akun #'.$account->account_id.' berhasil dihapus dari stok.',
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => 'Gagal menghapus akun: '.$e->getMessage(),
+            ], 500);
         }
-
-        $account->delete();
-
-        return response()->json([
-            'message' => 'Akun berhasil dihapus.',
-        ]);
     }
 }

@@ -27,7 +27,7 @@ class Order extends Model
 
     public function account()
     {
-        return $this->belongsTo(Account::class, 'account_id', 'account_id');
+        return $this->belongsTo(Account::class, 'account_id', 'account_id')->withTrashed();
     }
 
     public function buyer()
@@ -38,5 +38,10 @@ class Order extends Model
     public function payment()
     {
         return $this->hasOne(Payment::class, 'order_id', 'order_id');
+    }
+
+    public function statusLogs()
+    {
+        return $this->hasMany(StatusLog::class, 'account_id', 'account_id')->orderByDesc('changed_at');
     }
 }

@@ -89,12 +89,12 @@ export default function OrderInvoice({ order }: OrderInvoiceProps) {
     const proofImageUrl = resolveStorageUrl(order.payment?.proof_image);
 
     const waConfirmationText = encodeURIComponent(
-        `Halo Admin GameStore, saya sudah melakukan checkout pesanan dengan Kode Transaksi: ${orderCode}. Akun: ${order.account?.title || 'Akun Game'} (${order.account?.game?.name || ''}). Mohon dicek ya, terima kasih!`
+        `Halo Admin TempatAkun, saya sudah melakukan checkout pesanan dengan Kode Transaksi: ${orderCode}. Akun: ${order.account?.title || 'Akun Game'} (${order.account?.game?.name || ''}). Mohon dicek ya, terima kasih!`
     );
 
     return (
         <MainLayout>
-            <Head title={`Invoice ${orderCode} - AKUNKU Store`} />
+            <Head title={`Invoice ${orderCode} - TempatAkun`} />
 
             <div className="max-w-3xl mx-auto space-y-8 py-4">
                 

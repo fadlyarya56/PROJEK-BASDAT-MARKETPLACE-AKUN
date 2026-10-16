@@ -23,7 +23,7 @@ class AccountDelivered extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Akun '.$this->account->game->name.' - AKUNKU Store',
+            subject: 'Akun '.$this->account->game->name.' - TempatAkun',
         );
     }
 
@@ -68,7 +68,7 @@ class AccountDelivered extends Mailable
     private function fallbackTemplate(): string
     {
         return <<<'TEXT'
-AKUN {game_name} BY AKUNKU
+AKUN {game_name} BY TEMPATAKUN
 
 NOTE:  SEBELUM LOGIN KE DALAM GAME, AMANKAN AKUN TERLEBIH DAHULU (MENGGANTI GMAIL & PASSWORD) DENGAN PANDUAN YANG TELAH DIKIRIMKAN
 

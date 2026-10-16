@@ -86,11 +86,51 @@ interface ManagedImage {
     file?: File;
 }
 
+interface OrderItem {
+    order_id: number;
+    buyer_id: number;
+    account_id: number;
+    delivery_email: string;
+    status: 'menunggu' | 'menunggu_konfirmasi' | 'valid' | 'ditolak';
+    created_at: string;
+    updated_at: string;
+    buyer?: {
+        buyer_id: number;
+        name: string;
+        email: string;
+        phone: string;
+    };
+    account?: {
+        account_id: number;
+        title: string;
+        price: number | string;
+        status: string;
+        game?: {
+            game_id: number;
+            name: string;
+        };
+    };
+    payment?: {
+        payment_id: number;
+        method: string;
+        proof_image: string | null;
+        proof_image_url: string | null;
+        status: string;
+        confirmed_at: string | null;
+        confirmed_by?: {
+            admin_id: number;
+            name: string;
+        } | null;
+    } | null;
+    status_logs?: StatusLog[];
+}
+
 export default function AdminDashboard() {
-    const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'accounts' | 'logs' | 'games'>('overview');
+    const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'payments' | 'accounts' | 'logs' | 'games'>('overview');
 
     // Data State
     const [stats, setStats] = useState<DashboardStats | null>(null);
+    const [orders, setOrders] = useState<OrderItem[]>([]);
     const [payments, setPayments] = useState<PaymentItem[]>([]);
     const [accounts, setAccounts] = useState<AccountItem[]>([]);
     const [statusLogs, setStatusLogs] = useState<StatusLog[]>([]);
@@ -98,12 +138,18 @@ export default function AdminDashboard() {
 
     // UI & Filter States
     const [loading, setLoading] = useState(false);
+    const [orderFilter, setOrderFilter] = useState<string>('semua');
+    const [orderSearch, setOrderSearch] = useState<string>('');
+    const [orderPagination, setOrderPagination] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
     const [paymentFilter, setPaymentFilter] = useState<string>('semua');
     const [paymentSearch, setPaymentSearch] = useState<string>('');
+    const [paymentPagination, setPaymentPagination] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
     const [accountGameFilter, setAccountGameFilter] = useState<string>('semua');
     const [accountStatusFilter, setAccountStatusFilter] = useState<string>('semua');
     const [accountSearch, setAccountSearch] = useState<string>('');
+    const [accountPagination, setAccountPagination] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
     const [logSearch, setLogSearch] = useState<string>('');
+    const [logPagination, setLogPagination] = useState<{ current_page: number; last_page: number; total: number } | null>(null);
 
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [actionLoading, setActionLoading] = useState<number | null>(null);
@@ -166,7 +212,39 @@ export default function AdminDashboard() {
         }
     };
 
-    const loadPayments = async (status?: string, search?: string) => {
+    const loadOrders = async (status = orderFilter, search = orderSearch, page = 1) => {
+        setLoading(true);
+        try {
+            const params = new URLSearchParams();
+            if (status && status !== 'semua') {
+                params.append('status', status);
+            }
+            if (search && search.trim() !== '') {
+                params.append('search', search.trim());
+            }
+            if (page > 1) {
+                params.append('page', String(page));
+            }
+
+            const url = params.toString() ? `/admin/orders?${params.toString()}` : '/admin/orders';
+            const res = await fetch(url);
+            if (res.ok) {
+                const data = await res.json();
+                setOrders(data.data || []);
+                setOrderPagination({
+                    current_page: data.current_page || 1,
+                    last_page: data.last_page || 1,
+                    total: data.total || 0,
+                });
+            }
+        } catch {
+            // Handle error silently
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const loadPayments = async (status?: string, search?: string, page = 1) => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -179,12 +257,20 @@ export default function AdminDashboard() {
             if (targetSearch && targetSearch.trim() !== '') {
                 params.append('search', targetSearch.trim());
             }
+            if (page > 1) {
+                params.append('page', String(page));
+            }
 
             const url = params.toString() ? `/admin/payments?${params.toString()}` : '/admin/payments';
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 setPayments(data.data || []);
+                setPaymentPagination({
+                    current_page: data.current_page || 1,
+                    last_page: data.last_page || 1,
+                    total: data.total || 0,
+                });
             }
         } catch {
             // Handle error silently
@@ -193,7 +279,7 @@ export default function AdminDashboard() {
         }
     };
 
-    const loadAccounts = async (gameId?: string, status?: string, search?: string) => {
+    const loadAccounts = async (gameId?: string, status?: string, search?: string, page = 1) => {
         setLoading(true);
         try {
             const params = new URLSearchParams();
@@ -210,12 +296,20 @@ export default function AdminDashboard() {
             if (targetSearch && targetSearch.trim() !== '') {
                 params.append('search', targetSearch.trim());
             }
+            if (page > 1) {
+                params.append('page', String(page));
+            }
 
             const url = params.toString() ? `/admin/accounts?${params.toString()}` : '/admin/accounts';
             const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
                 setAccounts(data.data || []);
+                setAccountPagination({
+                    current_page: data.current_page || 1,
+                    last_page: data.last_page || 1,
+                    total: data.total || 0,
+                });
             }
         } catch {
             // Handle error silently
@@ -224,13 +318,29 @@ export default function AdminDashboard() {
         }
     };
 
-    const loadLogs = async () => {
+    const loadLogs = async (search?: string, page = 1) => {
         setLoading(true);
         try {
-            const res = await fetch('/admin/status-logs');
+            const params = new URLSearchParams();
+            const targetSearch = search !== undefined ? search : logSearch;
+
+            if (targetSearch && targetSearch.trim() !== '') {
+                params.append('search', targetSearch.trim());
+            }
+            if (page > 1) {
+                params.append('page', String(page));
+            }
+
+            const url = params.toString() ? `/admin/status-logs?${params.toString()}` : '/admin/status-logs';
+            const res = await fetch(url);
             if (res.ok) {
                 const data = await res.json();
-                setStatusLogs(data || []);
+                setStatusLogs(data.data || []);
+                setLogPagination({
+                    current_page: data.current_page || 1,
+                    last_page: data.last_page || 1,
+                    total: data.total || 0,
+                });
             }
         } catch {
             // Handle error silently
@@ -257,6 +367,7 @@ export default function AdminDashboard() {
     useEffect(() => {
         loadStats();
         loadGames();
+        loadOrders();
         loadPayments();
         loadAccounts();
         loadLogs();
@@ -268,6 +379,8 @@ export default function AdminDashboard() {
             loadStats();
             loadLogs();
             loadPayments('menunggu');
+        } else if (tab === 'orders') {
+            loadOrders(orderFilter, orderSearch);
         } else if (tab === 'payments') {
             loadPayments(paymentFilter, paymentSearch);
         } else if (tab === 'accounts') {
@@ -296,9 +409,11 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (res.ok) {
                 showNotify(data.message || 'Pembayaran berhasil disetujui.');
-                loadPayments(paymentFilter, paymentSearch);
+                loadPayments(paymentFilter, paymentSearch, paymentPagination?.current_page || 1);
+                loadOrders(orderFilter, orderSearch, orderPagination?.current_page || 1);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, accountPagination?.current_page || 1);
                 loadStats();
-                loadLogs();
+                loadLogs(logSearch, 1);
             } else {
                 showNotify(data.message || 'Gagal memverifikasi pembayaran.', 'error');
             }
@@ -326,9 +441,11 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (res.ok) {
                 showNotify(data.message || 'Pembayaran ditolak.');
-                loadPayments(paymentFilter, paymentSearch);
+                loadPayments(paymentFilter, paymentSearch, paymentPagination?.current_page || 1);
+                loadOrders(orderFilter, orderSearch, orderPagination?.current_page || 1);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, accountPagination?.current_page || 1);
                 loadStats();
-                loadLogs();
+                loadLogs(logSearch, 1);
             } else {
                 showNotify(data.message || 'Gagal menolak pembayaran.', 'error');
             }
@@ -375,7 +492,7 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (res.ok) {
                 showNotify(data.message || 'Status Hot Item berhasil diperbarui.');
-                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, accountPagination?.current_page || 1);
             } else {
                 showNotify(data.message || 'Gagal mengubah status Hot Item.', 'error');
             }
@@ -398,7 +515,7 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (res.ok) {
                 showNotify(data.message || 'Status akun berhasil diperbarui.');
-                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, accountPagination?.current_page || 1);
                 loadStats();
             } else {
                 showNotify(data.message || 'Gagal mengubah status akun.', 'error');
@@ -422,7 +539,7 @@ export default function AdminDashboard() {
             const data = await res.json();
             if (res.ok) {
                 showNotify(data.message || 'Akun telah dihapus.');
-                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, accountPagination?.current_page || 1);
                 loadStats();
             } else {
                 showNotify(data.message || 'Gagal menghapus akun.', 'error');
@@ -591,7 +708,7 @@ export default function AdminDashboard() {
                 setIsAccountModalOpen(false);
                 setEditingAccount(null);
                 setManagedImages([]);
-                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, editingAccount ? (accountPagination?.current_page || 1) : 1);
                 loadStats();
             } else {
                 showNotify(data.message || 'Gagal menyimpan data akun.', 'error');
@@ -643,21 +760,89 @@ export default function AdminDashboard() {
         }
     };
 
-    // Filter Logs Local
+    // Filter Logs (Data log sudah dipaginasi dan difilter di server)
     const filteredLogs = useMemo(() => {
-        if (!logSearch.trim()) return statusLogs;
-        const q = logSearch.toLowerCase();
-        return statusLogs.filter(log => 
-            String(log.account_id).includes(q) ||
-            (log.account_title && log.account_title.toLowerCase().includes(q)) ||
-            log.old_status.toLowerCase().includes(q) ||
-            log.new_status.toLowerCase().includes(q)
+        return statusLogs;
+    }, [statusLogs]);
+
+    const renderPagination = (
+        pagination: { current_page: number; last_page: number; total: number } | null,
+        onPageChange: (page: number) => void,
+        itemLabel: string
+    ) => {
+        if (!pagination || pagination.total === 0) return null;
+
+        const { current_page, last_page, total } = pagination;
+
+        const getPageNumbers = () => {
+            const delta = 1;
+            const range: (number | string)[] = [];
+
+            if (last_page <= 7) {
+                for (let i = 1; i <= last_page; i++) range.push(i);
+            } else {
+                range.push(1);
+                if (current_page > 3) range.push('...');
+                const start = Math.max(2, current_page - delta);
+                const end = Math.min(last_page - 1, current_page + delta);
+                for (let i = start; i <= end; i++) range.push(i);
+                if (current_page < last_page - 2) range.push('...');
+                range.push(last_page);
+            }
+            return range;
+        };
+
+        return (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-dropbox-border/60 text-xs">
+                <span className="text-dropbox-muted text-center sm:text-left">
+                    Halaman <span className="text-white font-bold">{current_page}</span> dari <span className="text-white font-bold">{last_page}</span> <span className="text-dropbox-muted/70">(Total {total} {itemLabel})</span>
+                </span>
+                <div className="flex items-center gap-1.5 flex-wrap justify-center">
+                    <button
+                        type="button"
+                        disabled={current_page <= 1 || loading}
+                        onClick={() => onPageChange(current_page - 1)}
+                        className="px-3 py-1.5 rounded-xl border border-dropbox-border bg-[#0A0D15] hover:bg-[#182033] text-white disabled:opacity-30 disabled:pointer-events-none transition text-xs font-semibold"
+                    >
+                        &larr; Prev
+                    </button>
+                    {getPageNumbers().map((p, idx) => (
+                        typeof p === 'number' ? (
+                            <button
+                                key={idx}
+                                type="button"
+                                disabled={loading}
+                                onClick={() => onPageChange(p)}
+                                className={`min-w-[32px] h-8 px-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center ${
+                                    current_page === p
+                                        ? 'bg-dropbox-accent text-white shadow-md shadow-blue-900/40 ring-1 ring-blue-400/50'
+                                        : 'border border-dropbox-border/80 bg-[#0A0D15] hover:bg-[#182033] text-slate-300 hover:text-white'
+                                }`}
+                            >
+                                {p}
+                            </button>
+                        ) : (
+                            <span key={idx} className="px-1 text-dropbox-muted select-none">
+                                •••
+                            </span>
+                        )
+                    ))}
+                    <button
+                        type="button"
+                        disabled={current_page >= last_page || loading}
+                        onClick={() => onPageChange(current_page + 1)}
+                        className="px-3 py-1.5 rounded-xl border border-dropbox-border bg-[#0A0D15] hover:bg-[#182033] text-white disabled:opacity-30 disabled:pointer-events-none transition text-xs font-semibold"
+                    >
+                        Next &rarr;
+                    </button>
+                </div>
+            </div>
         );
-    }, [statusLogs, logSearch]);
+    };
 
     return (
         <>
-            <Head title="Panel Admin - AKUNKU Store" />
+            <Head title="Panel Admin - TempatAkun" />
 
             <div className="min-h-screen bg-[#0B0F19] text-dropbox-text font-sans antialiased flex flex-col selection:bg-blue-600 selection:text-white">
 
@@ -678,12 +863,14 @@ export default function AdminDashboard() {
                 {/* Topbar / Header Utama Dashboard Dark Theme */}
                 <header className="bg-[#0B0F19]/90 backdrop-blur-md border-b border-dropbox-border sticky top-0 z-30 transition-colors">
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <Link href="/admin" className="text-xl font-black tracking-tight text-white flex items-center gap-1">
-                                <span>AKUN</span>
-                                <span className="text-dropbox-accent">KU</span>
+                        <div className="flex items-center gap-2.5">
+                            <Link href="/admin" className="text-xl font-black tracking-tight text-white flex items-center gap-1.5">
+                                <div className="w-7 h-7 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center text-white text-xs font-black shadow-md shadow-blue-600/30">
+                                    T
+                                </div>
+                                <span>TEMPAT<span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">AKUN</span></span>
                             </Link>
-                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-950/80 border border-blue-800/80 text-blue-400">
+                            <span className="text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full bg-blue-950/80 border border-blue-800/80 text-blue-400 hidden sm:inline-block">
                                 ADMIN CONSOLE
                             </span>
                         </div>
@@ -693,25 +880,19 @@ export default function AdminDashboard() {
                                 href="/katalog"
                                 target="_blank"
                                 rel="noreferrer"
-                                className="text-xs font-bold text-slate-300 hover:text-white border border-dropbox-border bg-[#111726] hover:bg-[#182033] px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"
+                                className="text-xs font-bold text-slate-300 hover:text-white border border-dropbox-border bg-[#111726] hover:bg-[#182033] px-3 sm:px-3.5 py-2 rounded-xl transition flex items-center gap-1.5 shadow-sm"
                             >
                                 <span>Katalog Web</span>
                                 <svg className="w-3.5 h-3.5 text-dropbox-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                                 </svg>
                             </a>
-                            <button
-                                onClick={handleLogout}
-                                className="text-xs font-bold text-rose-400 hover:text-rose-300 border border-rose-900/60 bg-rose-950/40 hover:bg-rose-900/40 px-3.5 py-2 rounded-xl transition"
-                            >
-                                Keluar
-                            </button>
                         </div>
                     </div>
 
                     {/* Navigasi Tab Modern Gamer Style */}
                     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-dropbox-border/60">
-                        <nav className="flex space-x-2 overflow-x-auto py-2 text-xs font-bold scrollbar-none">
+                        <nav className="flex space-x-2 overflow-x-auto py-2.5 text-xs font-bold scrollbar-none whitespace-nowrap flex-nowrap">
                             <button
                                 onClick={() => handleTabChange('overview')}
                                 className={`px-4 py-2 rounded-xl transition ${
@@ -721,6 +902,20 @@ export default function AdminDashboard() {
                                 }`}
                             >
                                 Ringkasan
+                            </button>
+
+                            <button
+                                onClick={() => handleTabChange('orders')}
+                                className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
+                                    activeTab === 'orders'
+                                        ? 'bg-dropbox-accent text-white shadow-md shadow-blue-900/30'
+                                        : 'text-dropbox-muted hover:text-white hover:bg-[#111726]'
+                                }`}
+                            >
+                                <span>Riwayat Pesanan</span>
+                                {orderPagination && orderPagination.total > 0 && (
+                                    <span className="text-[11px] text-dropbox-muted/80">({orderPagination.total})</span>
+                                )}
                             </button>
 
                             <button
@@ -748,18 +943,23 @@ export default function AdminDashboard() {
                                 }`}
                             >
                                 <span>Kelola Stok Akun</span>
-                                <span className="text-[11px] text-dropbox-muted/80">({stats?.available_accounts ?? 0})</span>
+                                <span className="text-[11px] text-dropbox-muted/80">
+                                    ({accountPagination ? accountPagination.total : (stats?.available_accounts ?? 0)})
+                                </span>
                             </button>
 
                             <button
                                 onClick={() => handleTabChange('logs')}
-                                className={`px-4 py-2 rounded-xl transition ${
+                                className={`px-4 py-2 rounded-xl transition flex items-center gap-1.5 ${
                                     activeTab === 'logs'
                                         ? 'bg-dropbox-accent text-white shadow-md shadow-blue-900/30'
                                         : 'text-dropbox-muted hover:text-white hover:bg-[#111726]'
                                 }`}
                             >
-                                Audit Log Status (Trigger)
+                                <span>Audit Log Status (Trigger)</span>
+                                {logPagination && logPagination.total > 0 && (
+                                    <span className="text-[11px] text-dropbox-muted/80">({logPagination.total})</span>
+                                )}
                             </button>
 
                             <button
@@ -953,25 +1153,221 @@ export default function AdminDashboard() {
                         </div>
                     )}
 
+                    {/* TAB: RIWAYAT PESANAN */}
+                    {activeTab === 'orders' && (
+                        <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xl animate-in fade-in duration-200">
+                            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-dropbox-border pb-4">
+                                <div>
+                                    <h2 className="text-base font-bold text-white">
+                                        Riwayat Pesanan
+                                    </h2>
+                                    <p className="text-xs text-dropbox-muted">
+                                        Semua data transaksi pesanan pelanggan tersimpan lengkap dan rapi.
+                                    </p>
+                                </div>
+
+                                {/* Filter & Toolbar Ramah Mobile */}
+                                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
+                                    <div className="relative w-full sm:w-64">
+                                        <input
+                                            type="text"
+                                            placeholder="Cari ID pesanan, nama, email, hp..."
+                                            value={orderSearch}
+                                            onChange={(e) => setOrderSearch(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && loadOrders(orderFilter, orderSearch)}
+                                            className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition w-full"
+                                        />
+                                    </div>
+
+                                    <select
+                                        value={orderFilter}
+                                        onChange={(e) => {
+                                            setOrderFilter(e.target.value);
+                                            loadOrders(e.target.value, orderSearch);
+                                        }}
+                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer w-full sm:w-auto"
+                                    >
+                                        <option value="semua">Semua Status Pesanan</option>
+                                        <option value="valid">Valid / Selesai</option>
+                                        <option value="menunggu_konfirmasi">Menunggu Konfirmasi Admin</option>
+                                        <option value="menunggu">Menunggu Pembayaran</option>
+                                        <option value="ditolak">Ditolak</option>
+                                    </select>
+
+                                    <button
+                                        onClick={() => loadOrders(orderFilter, orderSearch)}
+                                        className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-4 py-2 rounded-xl transition border border-dropbox-border flex items-center justify-center gap-1.5"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <span>Segarkan</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Tabel Pesanan */}
+                            <div className="overflow-x-auto rounded-2xl border border-dropbox-border/80">
+                                <table className="w-full text-left text-xs border-collapse">
+                                    <thead>
+                                        <tr className="border-b border-dropbox-border/80 text-dropbox-muted uppercase font-bold text-[10px] tracking-wider bg-[#0A0D15]/80">
+                                            <th className="p-3">No. Pesanan</th>
+                                            <th className="p-3">Pembeli</th>
+                                            <th className="p-3">Akun Game</th>
+                                            <th className="p-3">Total Harga</th>
+                                            <th className="p-3">Metode &amp; Bukti</th>
+                                            <th className="p-3">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-dropbox-border/60">
+                                        {orders.map((ord) => {
+                                            const cleanPhone = (phone?: string) => {
+                                                if (!phone) return '';
+                                                let p = phone.replace(/[^0-9]/g, '');
+                                                if (p.startsWith('0')) p = '62' + p.slice(1);
+                                                return p;
+                                            };
+                                            const waNumber = cleanPhone(ord.buyer?.phone);
+
+                                            return (
+                                                <tr key={ord.order_id} className="hover:bg-[#182033]/40 transition">
+                                                    <td className="p-3 whitespace-nowrap">
+                                                        <div className="font-mono font-bold text-white">#ORD-{ord.order_id}</div>
+                                                        <div className="text-[11px] text-dropbox-muted">
+                                                            {new Date(ord.created_at).toLocaleString('id-ID', {
+                                                                day: 'numeric',
+                                                                month: 'short',
+                                                                year: 'numeric',
+                                                                hour: '2-digit',
+                                                                minute: '2-digit',
+                                                            })}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="p-3">
+                                                        <div className="font-bold text-white">{ord.buyer?.name || 'Anonim'}</div>
+                                                        {waNumber ? (
+                                                            <a
+                                                                href={`https://wa.me/${waNumber}`}
+                                                                target="_blank"
+                                                                rel="noreferrer"
+                                                                className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-mono my-0.5"
+                                                            >
+                                                                <span>💬</span>
+                                                                <span>{ord.buyer?.phone}</span>
+                                                            </a>
+                                                        ) : (
+                                                            <div className="text-[11px] text-dropbox-muted">{ord.buyer?.phone || '-'}</div>
+                                                        )}
+                                                        <div className="text-[10px] text-dropbox-muted truncate max-w-[160px]" title={ord.delivery_email || ord.buyer?.email}>
+                                                            ✉ {ord.delivery_email || ord.buyer?.email || '-'}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="p-3">
+                                                        {ord.account?.game?.name && (
+                                                            <span className="inline-block px-2 py-0.5 rounded text-[9px] font-bold bg-blue-950/80 border border-blue-800/80 text-blue-400 uppercase tracking-wider mb-1">
+                                                                {ord.account.game.name}
+                                                            </span>
+                                                        )}
+                                                        <div className="font-medium text-white line-clamp-1 max-w-[180px]" title={ord.account?.title}>
+                                                            {ord.account?.title || `Akun #${ord.account_id}`}
+                                                        </div>
+                                                        <div className="text-[10px] font-mono text-dropbox-muted">
+                                                            ID Akun: #{ord.account_id}
+                                                        </div>
+                                                    </td>
+
+                                                    <td className="p-3 whitespace-nowrap">
+                                                        <span className="font-extrabold text-blue-400 text-sm">
+                                                            {formatRupiah(ord.account?.price)}
+                                                        </span>
+                                                    </td>
+
+                                                    <td className="p-3 whitespace-nowrap">
+                                                        <div className="font-semibold text-white">
+                                                            {ord.payment?.method || 'Belum Bayar'}
+                                                        </div>
+                                                        {ord.payment?.proof_image ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setPreviewImage(ord.payment!.proof_image)}
+                                                                className="mt-1 text-[11px] font-bold text-dropbox-accent hover:text-blue-300 underline flex items-center gap-1 cursor-pointer"
+                                                            >
+                                                                <span>📷 Pratinjau Bukti</span>
+                                                            </button>
+                                                        ) : (
+                                                            <span className="text-[11px] text-dropbox-muted italic block mt-0.5">
+                                                                Tanpa Bukti
+                                                            </span>
+                                                        )}
+                                                    </td>
+
+                                                    <td className="p-3 whitespace-nowrap">
+                                                        {ord.status === 'valid' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-950/80 border border-emerald-700/60 text-emerald-400">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                                                Valid / Selesai
+                                                            </span>
+                                                        )}
+                                                        {ord.status === 'menunggu_konfirmasi' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-amber-950/80 border border-amber-700/60 text-amber-300 animate-pulse">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                                                Menunggu Konfirmasi
+                                                            </span>
+                                                        )}
+                                                        {ord.status === 'menunggu' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-sky-950/80 border border-sky-700/60 text-sky-300">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-sky-400"></span>
+                                                                Menunggu Bayar
+                                                            </span>
+                                                        )}
+                                                        {ord.status === 'ditolak' && (
+                                                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-rose-950/80 border border-rose-700/60 text-rose-300">
+                                                                <span className="w-1.5 h-1.5 rounded-full bg-rose-400"></span>
+                                                                Ditolak
+                                                            </span>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
+
+                                        {orders.length === 0 && (
+                                            <tr>
+                                                <td colSpan={6} className="p-8 text-center text-dropbox-muted">
+                                                    {loading ? 'Memuat riwayat pesanan...' : 'Belum ada transaksi pesanan yang sesuai filter.'}
+                                                </td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Pagination Nav */}
+                            {renderPagination(orderPagination, (page) => loadOrders(orderFilter, orderSearch, page), 'Pesanan')}
+                        </div>
+                    )}
+
                     {/* TAB 2: VERIFIKASI PEMBAYARAN */}
                     {activeTab === 'payments' && (
-                        <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-6 space-y-5 shadow-xl animate-in fade-in duration-200">
+                        <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xl animate-in fade-in duration-200">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-dropbox-border pb-4">
                                 <div>
                                     <h2 className="text-base font-bold text-white">Daftar Verifikasi Pembayaran</h2>
                                     <p className="text-xs text-dropbox-muted">Validasi bukti transfer pembeli agar kredensial otomatis terkirim.</p>
                                 </div>
 
-                                {/* Filter & Pencarian Toolbar */}
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <div className="relative">
+                                {/* Filter & Pencarian Toolbar Ramah Mobile */}
+                                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
+                                    <div className="relative w-full sm:w-60">
                                         <input
                                             type="text"
                                             placeholder="Cari ID (ORD-..), email, judul..."
                                             value={paymentSearch}
                                             onChange={(e) => setPaymentSearch(e.target.value)}
                                             onKeyDown={(e) => e.key === 'Enter' && loadPayments(paymentFilter, paymentSearch)}
-                                            className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition w-60"
+                                            className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition w-full"
                                         />
                                     </div>
 
@@ -979,9 +1375,9 @@ export default function AdminDashboard() {
                                         value={paymentFilter}
                                         onChange={(e) => {
                                             setPaymentFilter(e.target.value);
-                                            loadPayments(e.target.value, paymentSearch);
+                                            loadPayments(e.target.value, paymentSearch, 1);
                                         }}
-                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer"
+                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer w-full sm:w-auto"
                                     >
                                         <option value="semua">Semua Status</option>
                                         <option value="menunggu">Menunggu Konfirmasi</option>
@@ -990,8 +1386,8 @@ export default function AdminDashboard() {
                                     </select>
 
                                     <button
-                                        onClick={() => loadPayments(paymentFilter, paymentSearch)}
-                                        className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-4 py-2 rounded-xl transition border border-dropbox-border hover:border-dropbox-accent"
+                                        onClick={() => loadPayments(paymentFilter, paymentSearch, 1)}
+                                        className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-4 py-2 rounded-xl transition border border-dropbox-border hover:border-dropbox-accent w-full sm:w-auto text-center"
                                     >
                                         Cari / Segarkan
                                     </button>
@@ -1087,36 +1483,47 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination Nav */}
+                            {renderPagination(paymentPagination, (page) => loadPayments(paymentFilter, paymentSearch, page), 'Pembayaran')}
                         </div>
                     )}
 
                     {/* TAB 3: KELOLA STOK AKUN */}
                     {activeTab === 'accounts' && (
-                        <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-6 space-y-5 shadow-xl animate-in fade-in duration-200">
+                        <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-4 sm:p-6 space-y-4 sm:space-y-5 shadow-xl animate-in fade-in duration-200">
                             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-dropbox-border pb-4">
                                 <div>
                                     <h2 className="text-base font-bold text-white">Inventaris Akun Game</h2>
                                     <p className="text-xs text-dropbox-muted">Kelola akun, foto galeri spesifikasi, dan kredensial login.</p>
                                 </div>
 
-                                {/* Toolbar & Quick Filters */}
-                                <div className="flex flex-wrap items-center gap-3">
-                                    <input
-                                        type="text"
-                                        placeholder="Cari ID (#12), judul, email..."
-                                        value={accountSearch}
-                                        onChange={(e) => setAccountSearch(e.target.value)}
-                                        onKeyDown={(e) => e.key === 'Enter' && loadAccounts(accountGameFilter, accountStatusFilter, accountSearch)}
-                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition w-56"
-                                    />
+                                {/* Toolbar & Quick Filters Ramah Mobile */}
+                                <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3">
+                                    <div className="flex items-center gap-2 w-full sm:w-auto">
+                                        <input
+                                            type="text"
+                                            placeholder="Cari ID (#12), judul, email..."
+                                            value={accountSearch}
+                                            onChange={(e) => setAccountSearch(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, 1)}
+                                            className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition flex-1 sm:w-56"
+                                        />
+                                        <button
+                                            onClick={() => loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, 1)}
+                                            className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-3.5 py-2 rounded-xl transition border border-dropbox-border hover:border-dropbox-accent text-center"
+                                        >
+                                            Cari
+                                        </button>
+                                    </div>
 
                                     <select
                                         value={accountGameFilter}
                                         onChange={(e) => {
                                             setAccountGameFilter(e.target.value);
-                                            loadAccounts(e.target.value, accountStatusFilter, accountSearch);
+                                            loadAccounts(e.target.value, accountStatusFilter, accountSearch, 1);
                                         }}
-                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer"
+                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer w-full sm:w-auto"
                                     >
                                         <option value="semua">Semua Kategori Game</option>
                                         {games.map(g => (
@@ -1128,9 +1535,9 @@ export default function AdminDashboard() {
                                         value={accountStatusFilter}
                                         onChange={(e) => {
                                             setAccountStatusFilter(e.target.value);
-                                            loadAccounts(accountGameFilter, e.target.value, accountSearch);
+                                            loadAccounts(accountGameFilter, e.target.value, accountSearch, 1);
                                         }}
-                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer"
+                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3 py-2 text-xs text-white font-medium outline-none focus:border-dropbox-accent cursor-pointer w-full sm:w-auto"
                                     >
                                         <option value="semua">Semua Status</option>
                                         <option value="tersedia">Tersedia</option>
@@ -1140,7 +1547,7 @@ export default function AdminDashboard() {
 
                                     <button
                                         onClick={openAddAccount}
-                                        className="bg-dropbox-accent hover:bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md shadow-blue-900/30 flex items-center gap-1.5"
+                                        className="bg-dropbox-accent hover:bg-blue-600 text-white font-bold text-xs px-4 py-2.5 rounded-xl transition shadow-md shadow-blue-900/30 flex items-center justify-center gap-1.5 w-full sm:w-auto"
                                     >
                                         <span>+</span>
                                         <span>Tambah Akun Baru</span>
@@ -1299,6 +1706,9 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination Nav */}
+                            {renderPagination(accountPagination, (page) => loadAccounts(accountGameFilter, accountStatusFilter, accountSearch, page), 'Akun')}
                         </div>
                     )}
 
@@ -1313,19 +1723,20 @@ export default function AdminDashboard() {
                                     </p>
                                 </div>
 
-                                <div className="flex items-center gap-3">
+                                <div className="flex items-center gap-3 w-full sm:w-auto">
                                     <input
                                         type="text"
-                                        placeholder="Filter ID akun atau status..."
+                                        placeholder="Cari ID akun, judul, atau status..."
                                         value={logSearch}
                                         onChange={(e) => setLogSearch(e.target.value)}
-                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition w-56"
+                                        onKeyDown={(e) => e.key === 'Enter' && loadLogs(logSearch, 1)}
+                                        className="bg-[#0A0D15] border border-dropbox-border rounded-xl px-3.5 py-2 text-xs text-white placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition flex-1 sm:w-56"
                                     />
                                     <button
-                                        onClick={loadLogs}
-                                        className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-4 py-2 rounded-xl transition border border-dropbox-border"
+                                        onClick={() => loadLogs(logSearch, 1)}
+                                        className="bg-[#182033] hover:bg-dropbox-accent text-white font-bold text-xs px-4 py-2 rounded-xl transition border border-dropbox-border text-center whitespace-nowrap"
                                     >
-                                        Segarkan Log
+                                        Cari / Segarkan
                                     </button>
                                 </div>
                             </div>
@@ -1371,6 +1782,9 @@ export default function AdminDashboard() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Pagination Nav */}
+                            {renderPagination(logPagination, (page) => loadLogs(logSearch, page), 'Log')}
                         </div>
                     )}
 
@@ -1435,11 +1849,11 @@ export default function AdminDashboard() {
                 {/* MODAL: PRATINJAU BUKTI PEMBAYARAN */}
                 {previewImage && (
                     <div 
-                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
                         onClick={() => setPreviewImage(null)}
                     >
                         <div 
-                            className="bg-[#111726] border border-dropbox-border rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl space-y-4 p-5"
+                            className="bg-[#111726] border border-dropbox-border rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl space-y-3 sm:space-y-4 p-4 sm:p-5"
                             onClick={(e) => e.stopPropagation()}
                         >
                             <div className="flex items-center justify-between border-b border-dropbox-border pb-3">
@@ -1451,11 +1865,11 @@ export default function AdminDashboard() {
                                     ✕
                                 </button>
                             </div>
-                            <div className="flex items-center justify-center bg-black/60 rounded-2xl p-2 border border-dropbox-border/60 max-h-[65vh] overflow-auto">
+                            <div className="flex items-center justify-center bg-black/60 rounded-2xl p-2 border border-dropbox-border/60 max-h-[60vh] overflow-auto">
                                 <img
                                     src={`/storage/${previewImage}`}
                                     alt="Bukti Transfer"
-                                    className="max-w-full max-h-[60vh] object-contain rounded-xl"
+                                    className="max-w-full max-h-[55vh] object-contain rounded-xl"
                                     onError={(e) => {
                                         (e.target as HTMLImageElement).src = previewImage.startsWith('http') ? previewImage : `/${previewImage}`;
                                     }}
@@ -1464,7 +1878,7 @@ export default function AdminDashboard() {
                             <div className="text-right pt-2 border-t border-dropbox-border/60">
                                 <button
                                     onClick={() => setPreviewImage(null)}
-                                    className="bg-dropbox-accent hover:bg-blue-600 text-white text-xs font-bold px-5 py-2 rounded-xl transition"
+                                    className="w-full sm:w-auto bg-dropbox-accent hover:bg-blue-600 text-white text-xs font-bold px-5 py-2.5 rounded-xl transition"
                                 >
                                     Selesai
                                 </button>
@@ -1476,14 +1890,14 @@ export default function AdminDashboard() {
                 {/* MODAL: TAMBAH / UBAH AKUN DENGAN PREVIEW FOTO REAL-TIME */}
                 {isAccountModalOpen && (
                     <div 
-                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
                         onClick={() => setIsAccountModalOpen(false)}
                     >
                         <div 
-                            className="bg-[#111726] border border-dropbox-border rounded-3xl max-w-xl w-full overflow-hidden shadow-2xl p-6 space-y-5"
+                            className="bg-[#111726] border border-dropbox-border rounded-2xl sm:rounded-3xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between border-b border-dropbox-border pb-3">
+                            <div className="flex items-center justify-between border-b border-dropbox-border pb-3 flex-shrink-0">
                                 <h3 className="font-black text-sm uppercase tracking-wider text-white">
                                     {editingAccount ? `Ubah Data Akun #${editingAccount.account_id}` : 'Tambah Stok Akun Game Baru'}
                                 </h3>
@@ -1775,14 +2189,14 @@ export default function AdminDashboard() {
                 {/* MODAL: UBAH KONFIGURASI GAME */}
                 {isGameModalOpen && editingGame && (
                     <div 
-                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-200"
+                        className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 animate-in fade-in duration-200"
                         onClick={() => setIsGameModalOpen(false)}
                     >
                         <div 
-                            className="bg-[#111726] border border-dropbox-border rounded-3xl max-w-lg w-full overflow-hidden shadow-2xl p-6 space-y-5"
+                            className="bg-[#111726] border border-dropbox-border rounded-2xl sm:rounded-3xl max-w-lg w-full max-h-[90vh] flex flex-col overflow-hidden shadow-2xl p-4 sm:p-6 space-y-4 sm:space-y-5"
                             onClick={(e) => e.stopPropagation()}
                         >
-                            <div className="flex items-center justify-between border-b border-dropbox-border pb-3">
+                            <div className="flex items-center justify-between border-b border-dropbox-border pb-3 flex-shrink-0">
                                 <h3 className="font-black text-sm uppercase tracking-wider text-white">
                                     Konfigurasi Game: {editingGame.name}
                                 </h3>
@@ -1794,7 +2208,7 @@ export default function AdminDashboard() {
                                 </button>
                             </div>
 
-                            <form onSubmit={handleUpdateGame} className="space-y-4 text-xs">
+                            <form onSubmit={handleUpdateGame} className="space-y-4 max-h-[75vh] overflow-y-auto pr-1 text-xs">
                                 <div>
                                     <label htmlFor="form-game-name" className="block font-bold text-white uppercase text-[10px] tracking-wider mb-1.5">
                                         Nama Game

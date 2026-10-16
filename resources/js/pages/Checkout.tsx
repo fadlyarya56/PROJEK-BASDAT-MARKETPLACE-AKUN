@@ -25,6 +25,13 @@ export default function Checkout({ account }: CheckoutProps) {
     const [selectedMethod, setSelectedMethod] = useState<'qris' | 'bank' | 'e-wallet'>('qris');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
     const [imgError, setImgError] = useState(false);
+    const [copiedText, setCopiedText] = useState<string | null>(null);
+
+    const handleCopy = (text: string, label: string) => {
+        navigator.clipboard.writeText(text);
+        setCopiedText(label);
+        setTimeout(() => setCopiedText(null), 2000);
+    };
 
     const { data, setData, post, processing, errors } = useForm<{
         account_id: number;
@@ -187,17 +194,35 @@ export default function Checkout({ account }: CheckoutProps) {
                                         </div>
                                     )}
                                     {selectedMethod === 'bank' && (
-                                        <div className="space-y-1">
+                                        <div className="space-y-1.5">
                                             <p className="font-semibold text-xs text-slate-400">Transfer Bank BCA</p>
-                                            <p className="font-mono text-blue-400 text-lg font-bold">1234-5678-9012</p>
-                                            <p className="text-slate-400 text-[11px]">a.n. GameStore Marketplace Official</p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-mono text-blue-400 text-lg font-bold">1234-5678-9012</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCopy('123456789012', 'bca')}
+                                                    className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white transition border border-blue-500/40"
+                                                >
+                                                    {copiedText === 'bca' ? '✓ Tersalin' : 'Salin Rekening'}
+                                                </button>
+                                            </div>
+                                            <p className="text-slate-400 text-[11px]">a.n. TempatAkun Marketplace Official</p>
                                         </div>
                                     )}
                                     {selectedMethod === 'e-wallet' && (
-                                        <div className="space-y-1">
+                                        <div className="space-y-1.5">
                                             <p className="font-semibold text-xs text-slate-400">DANA / OVO / GoPay</p>
-                                            <p className="font-mono text-blue-400 text-lg font-bold">0812-3456-7890</p>
-                                            <p className="text-slate-400 text-[11px]">a.n. GameStore Marketplace Official</p>
+                                            <div className="flex flex-wrap items-center gap-2">
+                                                <p className="font-mono text-blue-400 text-lg font-bold">0812-3456-7890</p>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleCopy('081234567890', 'ewallet')}
+                                                    className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-blue-600/20 hover:bg-blue-600 text-blue-300 hover:text-white transition border border-blue-500/40"
+                                                >
+                                                    {copiedText === 'ewallet' ? '✓ Tersalin' : 'Salin Nomor'}
+                                                </button>
+                                            </div>
+                                            <p className="text-slate-400 text-[11px]">a.n. TempatAkun Marketplace Official</p>
                                         </div>
                                     )}
                                 </div>
