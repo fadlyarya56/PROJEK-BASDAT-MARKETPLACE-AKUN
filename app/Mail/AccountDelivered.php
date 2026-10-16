@@ -23,7 +23,7 @@ class AccountDelivered extends Mailable
     public function envelope(): Envelope
     {
         return new Envelope(
-            subject: 'Akun '.$this->account->game->name.' - KESHOZONE',
+            subject: 'Akun '.$this->account->game->name.' - AKUNKU Store',
         );
     }
 

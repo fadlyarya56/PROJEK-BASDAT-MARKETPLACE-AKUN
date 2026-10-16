@@ -18,11 +18,13 @@ class Account extends Model
         'title',
         'price',
         'image_url',
+        'images',
         'description',
         'account_email',
         'email_password',
         'game_password',
         'status', // tersedia | tertunda | terjual
+        'is_hot',
         'sold_at',
     ];
 
@@ -35,6 +37,8 @@ class Account extends Model
 
     protected $casts = [
         'price' => 'decimal:2',
+        'images' => 'array',
+        'is_hot' => 'boolean',
         'sold_at' => 'datetime',
     ];
 
@@ -48,18 +52,47 @@ class Account extends Model
         return $this->hasMany(Order::class, 'account_id', 'account_id');
     }
 
-    protected $appends = ['image_full_url'];
+    protected $appends = ['image_full_url', 'images_list'];
 
     public function getImageFullUrlAttribute(): ?string
     {
-        if (! $this->image_url) {
+        // Prioritaskan gambar pertama dari images jika image_url kosong
+        $target = $this->image_url;
+        if (! $target && is_array($this->images) && ! empty($this->images)) {
+            $target = $this->images[0];
+        }
+
+        if (! $target) {
             return null;
         }
 
-        if (str_starts_with($this->image_url, 'http://') || str_starts_with($this->image_url, 'https://')) {
-            return $this->image_url;
+        if (str_starts_with($target, 'http://') || str_starts_with($target, 'https://')) {
+            return $target;
         }
 
-        return asset('storage/'.$this->image_url);
+        return asset('storage/'.ltrim($target, '/'));
+    }
+
+    public function getImagesListAttribute(): array
+    {
+        $list = [];
+
+        if (is_array($this->images) && ! empty($this->images)) {
+            foreach ($this->images as $img) {
+                if ($img) {
+                    $url = (str_starts_with($img, 'http://') || str_starts_with($img, 'https://'))
+                        ? $img
+                        : asset('storage/'.ltrim($img, '/'));
+                    $list[] = $url;
+                }
+            }
+        }
+
+        // Jika images kosong tapi image_url ada, masukkan image_url sebagai gambar tunggal
+        if (empty($list) && $this->image_url) {
+            $list[] = $this->image_full_url;
+        }
+
+        return $list;
     }
 }

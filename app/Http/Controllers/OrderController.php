@@ -7,6 +7,7 @@ use App\Models\Buyer;
 use App\Models\Order;
 use App\Models\Payment;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 class OrderController extends Controller
@@ -42,43 +43,67 @@ class OrderController extends Controller
         $request->validate([
             'account_id' => 'required|exists:accounts,account_id',
             'delivery_email' => 'required|email',
-            'payment_method' => 'required',
-            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg|max:2048',
+            'payment_method' => 'nullable|string',
+            'proof_image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120',
         ]);
 
-        // 1. Buat atau cari data Buyer berdasarkan email
-        $buyer = Buyer::firstOrCreate(
-            ['email' => $request->delivery_email],
-            ['name' => 'Pembeli '.rand(100, 999)]
-        );
+        $account = Account::find($request->account_id);
+        if (! $account || $account->status !== 'tersedia') {
+            return back()->withErrors([
+                'account_id' => 'Akun ini sudah tidak tersedia atau sedang diproses oleh pembeli lain.',
+            ]);
+        }
 
-        // 2. Simpan Data Pesanan Baru
-        $order = Order::create([
-            'buyer_id' => $buyer->buyer_id,
-            'account_id' => $request->account_id,
-            'delivery_email' => $request->delivery_email,
-            'status' => 'menunggu_konfirmasi',
-        ]);
+        $paymentMethod = $request->input('payment_method') ?: $request->input('method', 'QRIS');
 
-        // Lock akun menjadi 'tertunda' agar tidak bisa di-checkout pembeli lain
-        Account::where('account_id', $request->account_id)->update(['status' => 'tertunda']);
-
-        // 3. Upload Gambar Bukti Pembayaran (jika ada)
+        // Simpan gambar bukti transfer jika diunggah
         $imagePath = null;
         if ($request->hasFile('proof_image')) {
             $imagePath = $request->file('proof_image')->store('payments', 'public');
         }
 
-        // 4. Simpan Data Pembayaran
-        Payment::create([
-            'order_id' => $order->order_id,
-            'method' => $request->payment_method,
-            'proof_image' => $imagePath,
-            'status' => 'menunggu',
-        ]);
+        $order = DB::transaction(function () use ($request, $account, $paymentMethod, $imagePath) {
+            // 1. Buat atau cari data Buyer berdasarkan email
+            $buyer = Buyer::firstOrCreate(
+                ['email' => $request->delivery_email],
+                ['name' => 'Pembeli '.rand(100, 999)]
+            );
 
-        // Redirect langsung ke halaman Lacak Pesanan dengan memasukkan order_id
-        return redirect()->to('/order-status?search=ORD-'.$order->order_id);
+            // 2. Simpan Data Pesanan Baru
+            $newOrder = Order::create([
+                'buyer_id' => $buyer->buyer_id,
+                'account_id' => $request->account_id,
+                'delivery_email' => $request->delivery_email,
+                'status' => 'menunggu_konfirmasi',
+            ]);
+
+            // Lock akun menjadi 'tertunda' agar tidak bisa di-checkout pembeli lain
+            $account->update(['status' => 'tertunda']);
+
+            // 3. Simpan Data Pembayaran
+            Payment::create([
+                'order_id' => $newOrder->order_id,
+                'method' => $paymentMethod,
+                'proof_image' => $imagePath,
+                'status' => 'menunggu',
+            ]);
+
+            return $newOrder;
+        });
+
+        // Alihkan pembeli ke halaman Invoice & Panduan Pesanan
+        return redirect()->route('order.invoice', ['order_id' => $order->order_id]);
+    }
+
+    public function invoice($order_id)
+    {
+        $cleanId = preg_replace('/[^0-9]/', '', (string) $order_id);
+        $order = Order::with(['account.game', 'payment', 'buyer'])
+            ->findOrFail($cleanId);
+
+        return Inertia::render('OrderInvoice', [
+            'order' => $order,
+        ]);
     }
 
     public function storePayment(Request $request, $order_id)

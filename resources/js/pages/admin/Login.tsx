@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head } from '@inertiajs/react';
+import { Head, Link } from '@inertiajs/react';
 
 export default function AdminLogin() {
     const [username, setUsername] = useState('');
@@ -43,38 +43,46 @@ export default function AdminLogin() {
 
     return (
         <>
-            <Head title="Masuk Admin - AKUNKU" />
-            <div className="min-h-screen bg-slate-100 flex items-center justify-center p-4 antialiased text-slate-900">
-                <main className="w-full max-w-sm bg-white border border-slate-300 rounded-lg p-6 sm:p-8">
+            <Head title="Masuk Admin - AKUNKU Store" />
+
+            <div className="min-h-screen bg-[#0B0F19] text-dropbox-text font-sans antialiased flex items-center justify-center p-4 selection:bg-blue-600 selection:text-white relative overflow-hidden">
+                {/* Background Glow */}
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <main className="w-full max-w-sm bg-[#111726] border border-dropbox-border rounded-3xl p-7 sm:p-8 relative z-10 shadow-2xl space-y-6">
                     
                     {/* Header Brand */}
-                    <div className="mb-6">
-                        <div className="flex items-center justify-between mb-1">
-                            <span className="text-xl font-bold tracking-tight text-slate-900">
-                                AKUN<span className="text-blue-700">KU</span>
+                    <div className="space-y-2 text-center">
+                        <div className="inline-flex items-center gap-2">
+                            <span className="text-2xl font-black tracking-tight text-white">
+                                AKUN<span className="text-dropbox-accent">KU</span>
                             </span>
-                            <span className="text-xs font-semibold px-2 py-0.5 rounded bg-slate-100 border border-slate-300 text-slate-700">
-                                Internal
+                            <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-full bg-blue-950/80 border border-blue-800/80 text-blue-400">
+                                INTERNAL
                             </span>
                         </div>
-                        <h1 className="text-sm font-semibold text-slate-800">Panel Administrator</h1>
-                        <p className="text-xs text-slate-600 mt-0.5">Masuk untuk mengelola pesanan, stok, dan audit transaksi.</p>
+                        <h1 className="text-sm font-bold text-white uppercase tracking-wider">
+                            Portal Administrator
+                        </h1>
+                        <p className="text-xs text-dropbox-muted">
+                            Masuk untuk verifikasi pembayaran, kelola stok akun, dan audit transaksi.
+                        </p>
                     </div>
 
                     {/* Feedback Alert */}
                     {error && (
                         <div 
                             role="alert" 
-                            className="mb-5 p-3 rounded border border-rose-300 bg-rose-50 text-rose-800 text-xs font-medium"
+                            className="p-3.5 rounded-2xl border border-rose-800/80 bg-rose-950/60 text-rose-300 text-xs font-medium animate-in fade-in duration-200"
                         >
                             {error}
                         </div>
                     )}
 
                     {/* Form Login */}
-                    <form onSubmit={submit} className="space-y-4">
-                        <div>
-                            <label htmlFor="username" className="block text-xs font-semibold text-slate-800 mb-1">
+                    <form onSubmit={submit} className="space-y-4 text-xs">
+                        <div className="space-y-1.5">
+                            <label htmlFor="username" className="block font-bold text-white uppercase text-[10px] tracking-wider">
                                 Username
                             </label>
                             <input
@@ -82,15 +90,15 @@ export default function AdminLogin() {
                                 type="text"
                                 value={username}
                                 onChange={(e) => setUsername(e.target.value)}
-                                placeholder="Contoh: admin"
+                                placeholder="Masukkan username admin"
                                 required
                                 autoComplete="username"
-                                className="w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700"
+                                className="w-full bg-[#0A0D15] border border-dropbox-border rounded-xl px-4 py-3 text-white text-xs placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition font-medium"
                             />
                         </div>
 
-                        <div>
-                            <label htmlFor="password" className="block text-xs font-semibold text-slate-800 mb-1">
+                        <div className="space-y-1.5">
+                            <label htmlFor="password" className="block font-bold text-white uppercase text-[10px] tracking-wider">
                                 Kata Sandi
                             </label>
                             <input
@@ -101,27 +109,27 @@ export default function AdminLogin() {
                                 placeholder="Masukkan kata sandi"
                                 required
                                 autoComplete="current-password"
-                                className="w-full rounded border border-slate-300 px-3 py-2 text-sm text-slate-900 bg-white outline-none focus:border-blue-700 focus:ring-1 focus:ring-blue-700"
+                                className="w-full bg-[#0A0D15] border border-dropbox-border rounded-xl px-4 py-3 text-white text-xs placeholder:text-dropbox-muted outline-none focus:border-dropbox-accent transition font-medium"
                             />
                         </div>
 
                         <button
                             type="submit"
                             disabled={processing}
-                            className="w-full mt-2 rounded bg-blue-700 hover:bg-blue-800 active:bg-blue-900 text-white font-medium py-2 px-4 text-sm transition-colors focus:ring-2 focus:ring-offset-2 focus:ring-blue-700 disabled:opacity-60"
+                            className="w-full mt-2 bg-dropbox-accent hover:bg-blue-600 text-white font-extrabold py-3.5 px-4 rounded-xl text-xs transition shadow-lg shadow-blue-900/40 border border-blue-400/30 disabled:opacity-60"
                         >
                             {processing ? 'Memverifikasi...' : 'Masuk ke Konsol Admin'}
                         </button>
                     </form>
 
                     {/* Footer Nav */}
-                    <div className="mt-6 pt-4 border-t border-slate-200 text-center">
-                        <a 
-                            href="/" 
-                            className="text-xs text-slate-600 hover:text-blue-700 underline underline-offset-2"
+                    <div className="pt-4 border-t border-dropbox-border/60 text-center">
+                        <Link 
+                            href="/katalog" 
+                            className="text-xs text-dropbox-muted hover:text-white font-medium transition"
                         >
-                            Kembali ke Katalog Publik
-                        </a>
+                            &larr; Kembali ke Katalog Publik
+                        </Link>
                     </div>
                 </main>
             </div>

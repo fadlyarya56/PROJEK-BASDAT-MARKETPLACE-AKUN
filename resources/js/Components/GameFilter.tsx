@@ -13,13 +13,14 @@ interface GameFilterProps {
 
 export default function GameFilter({ games, selectedGameId, onSelectGame }: GameFilterProps) {
     return (
-        <div className="flex flex-wrap gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
             <button
+                type="button"
                 onClick={() => onSelectGame(null)}
-                className={`px-5 py-2.5 rounded-full text-xs font-medium transition border ${
+                className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center border ${
                     selectedGameId === null
-                        ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
-                        : 'bg-white text-dropbox-text border-dropbox-border hover:bg-dropbox-secondary'
+                        ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-md shadow-blue-900/40'
+                        : 'bg-[#111726] text-dropbox-muted border-dropbox-border hover:border-dropbox-accent/50 hover:text-white'
                 }`}
             >
                 Semua Game
@@ -27,12 +28,13 @@ export default function GameFilter({ games, selectedGameId, onSelectGame }: Game
 
             {games.map((game) => (
                 <button
+                    type="button"
                     key={game.game_id}
                     onClick={() => onSelectGame(game.game_id)}
-                    className={`px-5 py-2.5 rounded-full text-xs font-medium transition border ${
+                    className={`px-5 py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center border ${
                         selectedGameId === game.game_id
-                            ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
-                            : 'bg-white text-dropbox-text border-dropbox-border hover:bg-dropbox-secondary'
+                            ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-md shadow-blue-900/40'
+                            : 'bg-[#111726] text-dropbox-muted border-dropbox-border hover:border-dropbox-accent/50 hover:text-white'
                     }`}
                 >
                     {game.name}

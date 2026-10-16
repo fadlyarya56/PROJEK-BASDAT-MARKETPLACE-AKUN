@@ -1,41 +1,48 @@
 import React, { useState, useEffect } from 'react';
 import MainLayout from '@/Layouts/MainLayout';
 import { useForm, Link } from '@inertiajs/react';
+import { resolveStorageUrl } from '@/lib/utils';
 
 interface AccountData {
     account_id: number;
     title: string;
     price: number;
-    image_url?: string;
+    image_url?: string | null;
+    image_full_url?: string | null;
+    images?: string[] | null;
+    images_list?: string[];
+    description?: string | null;
     game?: {
         name: string;
     };
 }
 
-interface OrderData {
-    order_id: number;
-    status: string;
-}
-
 interface CheckoutProps {
-    account?: AccountData;
-    order?: OrderData;
+    account?: AccountData | null;
 }
 
-export default function Checkout({ account, order }: CheckoutProps) {
+export default function Checkout({ account }: CheckoutProps) {
     const [selectedMethod, setSelectedMethod] = useState<'qris' | 'bank' | 'e-wallet'>('qris');
     const [previewImage, setPreviewImage] = useState<string | null>(null);
+    const [imgError, setImgError] = useState(false);
 
-    // Mengambil order_id atau account_id dari URL query jika ada
-    const urlParams = new URLSearchParams(typeof window !== 'undefined' ? window.location.search : '');
-    const currentOrderId = order?.order_id || urlParams.get('order_id') || account?.account_id || 36;
-
-    // Form Inertia disesuaikan persis dengan kebutuhan field backend
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData, post, processing, errors } = useForm<{
+        account_id: number;
+        delivery_email: string;
+        payment_method: string;
+        proof_image: File | null;
+    }>({
+        account_id: account?.account_id || 0,
         delivery_email: '',
-        method: 'QRIS',
-        proof_image: null as File | null,
+        payment_method: 'QRIS',
+        proof_image: null,
     });
+
+    useEffect(() => {
+        if (account?.account_id) {
+            setData('account_id', account.account_id);
+        }
+    }, [account?.account_id]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -48,12 +55,8 @@ export default function Checkout({ account, order }: CheckoutProps) {
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
 
-        // Mengirimkan request ke Endpoint: POST /orders/{order_id}/payment (multipart/form-data)
-        post(`/orders/${currentOrderId}/payment`, {
+        post('/checkout', {
             forceFormData: true,
-            onSuccess: () => {
-                alert('Bukti transfer berhasil diunggah! Status pesanan kini menunggu konfirmasi.');
-            },
         });
     };
 
@@ -65,29 +68,68 @@ export default function Checkout({ account, order }: CheckoutProps) {
         }).format(number);
     };
 
+    const firstImage = (account?.images_list && account.images_list.length > 0)
+        ? account.images_list[0]
+        : (account?.images && account.images.length > 0)
+            ? account.images[0]
+            : account?.image_url;
+
+    const imageUrl = resolveStorageUrl(firstImage, account?.image_full_url);
+
+    if (!account) {
+        return (
+            <MainLayout>
+                <div className="max-w-xl mx-auto py-20 text-center space-y-4 bg-[#111726] border border-dropbox-border rounded-3xl p-8">
+                    <span className="text-4xl">🛒</span>
+                    <h1 className="text-xl font-bold text-white">Tidak Ada Akun Yang Dipilih</h1>
+                    <p className="text-xs text-dropbox-muted">
+                        Silakan kembali ke katalog dan pilih akun game yang ingin kamu beli terlebih dahulu.
+                    </p>
+                    <div className="pt-2">
+                        <Link
+                            href="/katalog"
+                            className="inline-block bg-dropbox-accent hover:bg-blue-600 text-white text-xs font-bold px-6 py-3.5 rounded-full transition shadow-md shadow-blue-900/30"
+                        >
+                            &larr; Lihat Katalog Akun
+                        </Link>
+                    </div>
+                </div>
+            </MainLayout>
+        );
+    }
+
     return (
         <MainLayout>
             <div className="max-w-5xl mx-auto space-y-6 py-2">
                 {/* Header Judul */}
                 <div className="space-y-1">
-                    <h1 className="text-2xl font-bold text-dropbox-text tracking-tight">
+                    <h1 className="text-2xl font-black text-white tracking-tight">
                         Masukkan Detail Pembayaran
                     </h1>
+                    <p className="text-xs text-dropbox-muted">
+                        Isi email pengiriman akun dan konfirmasi metode transfer pilihanmu.
+                    </p>
                 </div>
+
+                {errors.account_id && (
+                    <div className="p-4 bg-rose-950/60 border border-rose-800 rounded-2xl text-xs text-rose-300 font-medium">
+                        {errors.account_id}
+                    </div>
+                )}
 
                 <form onSubmit={handleSubmit}>
                     {/* Grid Layout: Kiri Form (7 Col), Kanan Ringkasan (5 Col) */}
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
                         
-                        {/* BAGIAN KIRI: Form Pengisian (Container Putih Bersih) */}
-                        <div className="lg:col-span-7 bg-white border border-dropbox-border rounded-2xl p-6 sm:p-7 space-y-6 shadow-2xs">
-                            <h2 className="text-sm font-bold text-dropbox-text border-b border-dropbox-border pb-3">
+                        {/* BAGIAN KIRI: Form Pengisian */}
+                        <div className="lg:col-span-7 bg-[#111726] border border-dropbox-border rounded-3xl p-6 sm:p-7 space-y-6 shadow-xl">
+                            <h2 className="text-sm font-bold text-white border-b border-dropbox-border pb-3">
                                 Informasi Pembayaran &amp; Pengiriman
                             </h2>
 
                             {/* 1. Form Input Email (delivery_email) */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
+                                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                                     Email Pengiriman <span className="text-rose-500">*</span>
                                 </label>
                                 <input
@@ -96,17 +138,20 @@ export default function Checkout({ account, order }: CheckoutProps) {
                                     placeholder="contoh: emailkamu@gmail.com"
                                     value={data.delivery_email}
                                     onChange={(e) => setData('delivery_email', e.target.value)}
-                                    className="w-full bg-dropbox-bg border border-dropbox-border rounded-xl px-4 py-3 text-dropbox-text text-sm focus:outline-none focus:border-dropbox-accent transition font-normal placeholder:text-dropbox-muted/60"
+                                    className="w-full bg-[#0A0D15] border border-dropbox-border rounded-xl px-4 py-3 text-white text-sm focus:outline-none focus:border-dropbox-accent transition placeholder:text-slate-500"
                                 />
+                                <p className="text-[11px] text-dropbox-muted">
+                                    Data login akun (email &amp; password) akan langsung dikirimkan ke email ini.
+                                </p>
                                 {errors.delivery_email && (
-                                    <p className="text-xs text-rose-500 font-normal">{errors.delivery_email}</p>
+                                    <p className="text-xs text-rose-400">{errors.delivery_email}</p>
                                 )}
                             </div>
 
-                            {/* 2. Pilih Metode Pembayaran (method) */}
+                            {/* 2. Pilih Metode Pembayaran (payment_method) */}
                             <div className="space-y-3">
-                                <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
-                                    Metode Pembayaran
+                                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                                    Pilih Metode Pembayaran
                                 </label>
                                 
                                 <div className="grid grid-cols-3 gap-2.5">
@@ -117,12 +162,12 @@ export default function Checkout({ account, order }: CheckoutProps) {
                                             onClick={() => {
                                                 setSelectedMethod(m);
                                                 const methodName = m === 'qris' ? 'QRIS' : m === 'bank' ? 'Transfer BCA' : 'E-Wallet';
-                                                setData('method', methodName);
+                                                setData('payment_method', methodName);
                                             }}
-                                            className={`py-2.5 px-2 rounded-xl border text-xs transition text-center ${
+                                            className={`py-3 px-2 rounded-xl border text-xs font-bold transition text-center ${
                                                 selectedMethod === m
-                                                    ? 'bg-dropbox-accent text-white border-dropbox-accent font-semibold shadow-2xs'
-                                                    : 'bg-dropbox-bg text-dropbox-text border-dropbox-border font-medium hover:border-dropbox-text/30'
+                                                    ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-md shadow-blue-900/40'
+                                                    : 'bg-[#0A0D15] text-slate-400 border-dropbox-border hover:border-slate-500 hover:text-white'
                                             }`}
                                         >
                                             {m === 'qris' ? 'QRIS' : m === 'bank' ? 'Bank BCA' : 'E-Wallet'}
@@ -131,27 +176,28 @@ export default function Checkout({ account, order }: CheckoutProps) {
                                 </div>
 
                                 {/* Box Instruksi Bayar */}
-                                <div className="p-4 bg-dropbox-bg border border-dropbox-border rounded-xl text-xs space-y-3 text-dropbox-text">
+                                <div className="p-4 bg-[#0A0D15] border border-dropbox-border rounded-2xl text-xs space-y-3 text-slate-300">
                                     {selectedMethod === 'qris' && (
                                         <div className="text-center space-y-2">
-                                            <p className="font-normal text-xs text-dropbox-muted">Scan Kode QRIS di bawah menggunakan E-Wallet / M-Banking:</p>
-                                            <div className="w-32 h-32 bg-white mx-auto rounded-xl flex items-center justify-center text-xs p-2 border border-dropbox-border text-dropbox-muted font-medium shadow-2xs">
-                                                [ KODE QRIS ]
+                                            <p className="text-xs text-slate-400">Scan Kode QRIS di bawah menggunakan E-Wallet / M-Banking:</p>
+                                            <div className="w-36 h-36 bg-white mx-auto rounded-xl flex items-center justify-center text-xs p-2 border border-slate-300 text-slate-800 font-bold shadow-md">
+                                                [ KODE QRIS OFFICIAL ]
                                             </div>
+                                            <p className="text-[10px] text-emerald-400 font-medium">Mendukung Gopay, OVO, Dana, ShopeePay, BCA, Mandiri dll</p>
                                         </div>
                                     )}
                                     {selectedMethod === 'bank' && (
                                         <div className="space-y-1">
-                                            <p className="font-semibold text-xs">Transfer Bank BCA</p>
-                                            <p className="font-mono text-dropbox-accent text-base font-bold">1234-5678-9012</p>
-                                            <p className="text-dropbox-muted text-[11px] font-normal">a.n. GameStore Marketplace</p>
+                                            <p className="font-semibold text-xs text-slate-400">Transfer Bank BCA</p>
+                                            <p className="font-mono text-blue-400 text-lg font-bold">1234-5678-9012</p>
+                                            <p className="text-slate-400 text-[11px]">a.n. GameStore Marketplace Official</p>
                                         </div>
                                     )}
                                     {selectedMethod === 'e-wallet' && (
                                         <div className="space-y-1">
-                                            <p className="font-semibold text-xs">DANA / OVO / GoPay</p>
-                                            <p className="font-mono text-dropbox-accent text-base font-bold">0812-3456-7890</p>
-                                            <p className="text-dropbox-muted text-[11px] font-normal">a.n. GameStore Marketplace</p>
+                                            <p className="font-semibold text-xs text-slate-400">DANA / OVO / GoPay</p>
+                                            <p className="font-mono text-blue-400 text-lg font-bold">0812-3456-7890</p>
+                                            <p className="text-slate-400 text-[11px]">a.n. GameStore Marketplace Official</p>
                                         </div>
                                     )}
                                 </div>
@@ -159,22 +205,22 @@ export default function Checkout({ account, order }: CheckoutProps) {
 
                             {/* 3. Upload Bukti Transfer (proof_image) */}
                             <div className="space-y-2">
-                                <label className="block text-xs font-semibold text-dropbox-text uppercase tracking-wider">
+                                <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
                                     Upload Bukti Transfer <span className="text-rose-500">*</span>
                                 </label>
-                                <div className="bg-dropbox-bg border border-dropbox-border rounded-xl p-3">
+                                <div className="bg-[#0A0D15] border border-dropbox-border rounded-2xl p-4">
                                     <input
                                         type="file"
-                                        accept="image/jpeg,image/png,image/jpg"
+                                        accept="image/jpeg,image/png,image/jpg,image/webp"
                                         required
                                         onChange={handleImageChange}
-                                        className="w-full text-xs text-dropbox-muted file:mr-4 file:py-2 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-dropbox-text file:text-white hover:file:bg-black cursor-pointer font-normal"
+                                        className="w-full text-xs text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
                                     />
                                     {errors.proof_image && (
-                                        <p className="text-xs text-rose-500 mt-1 font-normal">{errors.proof_image}</p>
+                                        <p className="text-xs text-rose-400 mt-2">{errors.proof_image}</p>
                                     )}
                                     {previewImage && (
-                                        <div className="mt-3 w-24 aspect-square rounded-lg overflow-hidden border border-dropbox-border">
+                                        <div className="mt-4 w-28 aspect-square rounded-xl overflow-hidden border border-dropbox-border">
                                             <img src={previewImage} alt="Bukti Transfer" className="w-full h-full object-cover" />
                                         </div>
                                     )}
@@ -182,57 +228,58 @@ export default function Checkout({ account, order }: CheckoutProps) {
                             </div>
 
                             <div className="pt-2">
-                                <Link href="/katalog" className="text-xs font-medium text-dropbox-muted hover:text-dropbox-text transition">
+                                <Link href="/katalog" className="text-xs font-medium text-slate-400 hover:text-white transition">
                                     &larr; Batal dan Kembali ke Katalog
                                 </Link>
                             </div>
                         </div>
 
-                        {/* BAGIAN KANAN: Ringkasan Pesanan (Container Putih Bersih) */}
-                        <div className="lg:col-span-5 bg-white border border-dropbox-border rounded-2xl p-6 space-y-5 sticky top-24 shadow-2xs">
-                            <h2 className="text-sm font-bold text-dropbox-text border-b border-dropbox-border pb-3">
+                        {/* BAGIAN KANAN: Ringkasan Pesanan */}
+                        <div className="lg:col-span-5 bg-[#111726] border border-dropbox-border rounded-3xl p-6 sm:p-7 space-y-5 sticky top-24 shadow-xl">
+                            <h2 className="text-sm font-bold text-white border-b border-dropbox-border pb-3">
                                 Ringkasan Pesanan
                             </h2>
 
                             {/* Item Card Ringkas */}
-                            <div className="bg-dropbox-bg border border-dropbox-border rounded-xl p-4 flex items-center space-x-4">
-                                <div className="w-16 h-16 bg-[#F2F0EB] border border-[#E3DFD7] rounded-lg overflow-hidden flex-shrink-0 flex items-center justify-center">
-                                    {account?.image_url ? (
+                            <div className="bg-[#0A0D15] border border-dropbox-border rounded-2xl p-4 flex items-center space-x-4">
+                                <div className="w-16 h-16 bg-[#111726] border border-dropbox-border rounded-xl overflow-hidden flex-shrink-0 flex items-center justify-center">
+                                    {imageUrl && !imgError ? (
                                         <img
-                                            src={account.image_url}
+                                            src={imageUrl}
                                             alt={account.title || `Akun #${account.account_id}`}
                                             className="w-full h-full object-cover"
+                                            onError={() => setImgError(true)}
                                         />
                                     ) : (
                                         <span className="text-dropbox-muted font-normal text-[10px]">No Image</span>
                                     )}
                                 </div>
                                 <div className="space-y-0.5 overflow-hidden">
-                                    <span className="text-[10px] font-semibold text-dropbox-accent uppercase tracking-wider block">
-                                        {account?.game?.name || 'GAME'}
+                                    <span className="text-[10px] font-bold text-dropbox-accent uppercase tracking-wider block">
+                                        {account.game?.name || 'GAME'}
                                     </span>
-                                    <h3 className="font-bold text-dropbox-text text-sm truncate">
-                                        {account?.title || `Akun Game #${account?.account_id || currentOrderId}`}
+                                    <h3 className="font-bold text-white text-sm truncate">
+                                        {account.title || `Akun Game #${account.account_id}`}
                                     </h3>
-                                    <span className="text-xs font-semibold text-dropbox-text block">
-                                        {formatRupiah(Number(account?.price || 150000))}
+                                    <span className="text-xs font-bold text-blue-400 block">
+                                        {formatRupiah(Number(account.price))}
                                     </span>
                                 </div>
                             </div>
 
                             {/* Rincian Biaya */}
                             <div className="space-y-2 text-xs pt-2 border-t border-dropbox-border">
-                                <div className="flex justify-between text-dropbox-muted font-normal">
+                                <div className="flex justify-between text-slate-400">
                                     <span>Harga Akun</span>
-                                    <span className="font-semibold text-dropbox-text">{formatRupiah(Number(account?.price || 150000))}</span>
+                                    <span className="font-bold text-white">{formatRupiah(Number(account.price))}</span>
                                 </div>
-                                <div className="flex justify-between text-dropbox-muted font-normal">
+                                <div className="flex justify-between text-slate-400">
                                     <span>Biaya Layanan</span>
-                                    <span className="font-semibold text-emerald-600">Gratis (Rp 0)</span>
+                                    <span className="font-bold text-emerald-400">Gratis (Rp 0)</span>
                                 </div>
-                                <div className="flex justify-between text-sm pt-2 border-t border-dropbox-border">
-                                    <span className="font-bold text-dropbox-text">Total Tagihan</span>
-                                    <span className="text-dropbox-accent font-extrabold text-base">{formatRupiah(Number(account?.price || 150000))}</span>
+                                <div className="flex justify-between text-sm pt-3 border-t border-dropbox-border">
+                                    <span className="font-bold text-white">Total Tagihan</span>
+                                    <span className="text-blue-400 font-black text-xl">{formatRupiah(Number(account.price))}</span>
                                 </div>
                             </div>
 
@@ -241,10 +288,15 @@ export default function Checkout({ account, order }: CheckoutProps) {
                                 <button
                                     type="submit"
                                     disabled={processing}
-                                    className="w-full bg-dropbox-accent hover:bg-blue-700 text-white text-xs font-semibold py-3.5 rounded-xl transition"
+                                    className="w-full bg-dropbox-accent hover:bg-blue-600 text-white text-xs font-extrabold py-4 rounded-2xl transition shadow-lg shadow-blue-900/40 border border-blue-400/30 flex items-center justify-center gap-2"
                                 >
-                                    {processing ? 'Memproses...' : 'Konfirmasi & Bayar Sekarang'}
+                                    <span>{processing ? 'Memproses Pesanan...' : 'Konfirmasi & Bayar Sekarang'}</span>
+                                    <span>&rarr;</span>
                                 </button>
+                            </div>
+
+                            <div className="text-[11px] text-slate-400 text-center">
+                                Data transaksi terlindungi enkripsi 256-bit
                             </div>
                         </div>
 

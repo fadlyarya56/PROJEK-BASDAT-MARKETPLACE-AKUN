@@ -8,6 +8,7 @@ use App\Http\Controllers\CatalogController;
 use App\Http\Controllers\OrderController;
 use App\Models\Account;
 use App\Models\Payment;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
@@ -19,16 +20,52 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 Route::get('/', function () {
-    return Inertia::render('Home');
-});
+    $hotItems = Account::with('game')
+        ->where('is_hot', true)
+        ->where('status', 'tersedia')
+        ->latest('account_id')
+        ->take(8)
+        ->get();
+
+    if ($hotItems->count() < 4) {
+        $fallback = Account::with('game')
+            ->where('status', 'tersedia')
+            ->whereNotIn('account_id', $hotItems->pluck('account_id'))
+            ->latest('account_id')
+            ->take(8 - $hotItems->count())
+            ->get();
+        $hotItems = $hotItems->concat($fallback);
+    }
+
+    return Inertia::render('Home', [
+        'hotItems' => $hotItems,
+    ]);
+})->name('home');
 
 Route::get('/katalog', [CatalogController::class, 'index'])->name('catalog');
+Route::get('/katalog/{account_id}', [CatalogController::class, 'show'])->name('catalog.show');
 
-Route::get('/checkout', function () {
-    return Inertia::render('Checkout');
+Route::get('/checkout', function (Request $request) {
+    $accountId = $request->query('account_id');
+
+    if (! $accountId) {
+        return redirect()->route('catalog');
+    }
+
+    $account = Account::with('game')->find($accountId);
+
+    if (! $account) {
+        return redirect()->route('catalog');
+    }
+
+    return Inertia::render('Checkout', [
+        'account' => $account,
+    ]);
 });
 
 Route::post('/checkout', [OrderController::class, 'store']);
+
+Route::get('/orders/{order_id}/invoice', [OrderController::class, 'invoice'])->name('order.invoice');
 
 Route::get('/order-status', [OrderController::class, 'status']);
 
@@ -110,6 +147,7 @@ Route::prefix('admin')->group(function () {
         Route::post('/accounts', [AccountAdminController::class, 'store']);
         Route::get('/accounts/{account_id}', [AccountAdminController::class, 'show']);
         Route::match(['post', 'put'], '/accounts/{account_id}', [AccountAdminController::class, 'update']);
+        Route::patch('/accounts/{account_id}/toggle-hot', [AccountAdminController::class, 'toggleHot']);
         Route::delete('/accounts/{account_id}', [AccountAdminController::class, 'destroy']);
 
         // Kelola Game & Template Email

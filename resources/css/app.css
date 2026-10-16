@@ -1,32 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: 'Poppins', sans-serif;
+  --font-sans: 'Poppins', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 
-  /* Palette Warna Soft & Solid */
-  --color-dropbox-bg: #F9F8F6;          
-  --color-dropbox-card: #FFFFFF;        
-  --color-dropbox-text: #2D312E;        
-  --color-dropbox-muted: #6C727F;       
+  /* Palette Warna Dark Modern Gaming dengan Electric Blue */
+  --color-dropbox-bg: #0B0F19;          /* Deep rich obsidian dark */
+  --color-dropbox-card: #111726;        /* Sleek card surface */
+  --color-dropbox-card-hover: #182033;  /* Hover card surface */
+  --color-dropbox-text: #F8FAFC;        /* Clean high-contrast white text */
+  --color-dropbox-muted: #94A3B8;       /* Smooth slate muted text */
   
-  --color-dropbox-accent: #2563EB;      
-  --color-dropbox-secondary: #EBF2FA;   
-  --color-dropbox-border: #E5E3DC;      
+  --color-dropbox-accent: #2563EB;      /* Electric Royal Blue */
+  --color-dropbox-accent-hover: #1D4ED8;
+  --color-dropbox-secondary: #1E293B;   /* Slate 800 for badges/secondary */
+  --color-dropbox-border: #1E293B;      /* Crisp dark border */
+  --color-dropbox-border-glow: rgba(37, 99, 235, 0.4);
 }
 
-/* Penerapan Rules Base */
+/* Penerapan Rules Base & Dark Gamer Style */
 @layer base {
-  *, ::before, ::after {
-    box-shadow: none;
-    text-shadow: none;
-    backdrop-filter: none;
-  }
-
   body {
     background-color: var(--color-dropbox-bg);
     color: var(--color-dropbox-text);
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
   }
 
   ::selection {
@@ -36,5 +34,21 @@
 
   input, select, textarea, button {
     font-family: inherit;
+  }
+
+  /* Custom Sleek Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0B0F19;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1E293B;
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2563EB;
   }
 }

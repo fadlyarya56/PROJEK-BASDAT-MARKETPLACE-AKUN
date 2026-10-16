@@ -26,7 +26,25 @@ class PaymentAdminController extends Controller
         if ($status && in_array($status, ['menunggu', 'dikonfirmasi', 'ditolak'])) {
             $query->where('status', $status);
         }
-        $payments = $query->paginate(15);
+
+        if ($request->filled('search')) {
+            $search = trim($request->query('search'));
+            $cleanOrderId = preg_replace('/[^0-9]/', '', $search);
+
+            $query->where(function ($q) use ($search, $cleanOrderId) {
+                if (! empty($cleanOrderId)) {
+                    $q->orWhere('order_id', $cleanOrderId);
+                }
+                $q->orWhereHas('order', function ($orderQuery) use ($search) {
+                    $orderQuery->where('delivery_email', 'like', "%{$search}%")
+                        ->orWhereHas('account', function ($accountQuery) use ($search) {
+                            $accountQuery->where('title', 'like', "%{$search}%");
+                        });
+                });
+            });
+        }
+
+        $payments = $query->paginate(20);
 
         return response()->json($payments);
     }

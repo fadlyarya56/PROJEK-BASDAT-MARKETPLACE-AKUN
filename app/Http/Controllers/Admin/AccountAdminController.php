@@ -26,14 +26,21 @@ class AccountAdminController extends Controller
         }
 
         if ($request->filled('search')) {
-            $searchTerm = '%'.$request->query('search').'%';
-            $query->where(function ($subQuery) use ($searchTerm) {
-                $subQuery->where('title', 'like', $searchTerm)
-                    ->orWhere('description', 'like', $searchTerm);
+            $rawSearch = trim($request->query('search'));
+            $searchTerm = '%'.$rawSearch.'%';
+            $numericId = preg_replace('/[^0-9]/', '', $rawSearch);
+
+            $query->where(function ($subQuery) use ($searchTerm, $numericId) {
+                if (! empty($numericId)) {
+                    $subQuery->orWhere('account_id', $numericId);
+                }
+                $subQuery->orWhere('title', 'like', $searchTerm)
+                    ->orWhere('description', 'like', $searchTerm)
+                    ->orWhere('account_email', 'like', $searchTerm);
             });
         }
 
-        $accounts = $query->paginate(15);
+        $accounts = $query->paginate(20);
 
         return response()->json($accounts);
     }
@@ -51,12 +58,29 @@ class AccountAdminController extends Controller
             'account_email' => 'required|string|max:255',
             'email_password' => 'required|string|max:255',
             'game_password' => 'required|string|max:255',
+            'is_hot' => 'nullable|boolean',
             'image' => 'nullable|image|max:4096',
+            'images.*' => 'nullable|image|max:4096',
         ]);
 
         $imagePath = null;
+        $imagesPaths = [];
+
+        // Upload multiple images jika ada
+        if ($request->hasFile('images')) {
+            foreach ($request->file('images') as $file) {
+                $imagesPaths[] = $file->store('accounts', 'public');
+            }
+        }
+
+        // Upload single image (jika diunggah)
         if ($request->hasFile('image')) {
             $imagePath = $request->file('image')->store('accounts', 'public');
+            if (empty($imagesPaths)) {
+                $imagesPaths[] = $imagePath;
+            }
+        } elseif (! empty($imagesPaths)) {
+            $imagePath = $imagesPaths[0];
         }
 
         $account = Account::create([
@@ -65,6 +89,8 @@ class AccountAdminController extends Controller
             'price' => $validated['price'],
             'description' => $validated['description'] ?? null,
             'image_url' => $imagePath,
+            'images' => ! empty($imagesPaths) ? $imagesPaths : null,
+            'is_hot' => $request->boolean('is_hot'),
             'account_email' => $validated['account_email'],
             'email_password' => $validated['email_password'],
             'game_password' => $validated['game_password'],
@@ -106,8 +132,22 @@ class AccountAdminController extends Controller
             'email_password' => 'sometimes|required|string|max:255',
             'game_password' => 'sometimes|required|string|max:255',
             'status' => 'sometimes|required|in:tersedia,tertunda,terjual',
+            'is_hot' => 'nullable|boolean',
             'image' => 'nullable|image|max:4096',
+            'images.*' => 'nullable|image|max:4096',
         ]);
+
+        // Multiple images upload
+        if ($request->hasFile('images')) {
+            $imagesPaths = [];
+            foreach ($request->file('images') as $file) {
+                $imagesPaths[] = $file->store('accounts', 'public');
+            }
+            $validated['images'] = $imagesPaths;
+            if (empty($validated['image_url']) && ! empty($imagesPaths)) {
+                $validated['image_url'] = $imagesPaths[0];
+            }
+        }
 
         if ($request->hasFile('image')) {
             if ($account->image_url && Storage::disk('public')->exists($account->image_url)) {
@@ -116,12 +156,30 @@ class AccountAdminController extends Controller
             $validated['image_url'] = $request->file('image')->store('accounts', 'public');
         }
 
+        if ($request->has('is_hot')) {
+            $validated['is_hot'] = $request->boolean('is_hot');
+        }
+
         $account->update($validated);
         $account->makeVisible(['account_email', 'email_password', 'game_password']);
 
         return response()->json([
             'message' => 'Data akun game berhasil diperbarui.',
             'account' => $account->fresh(['game']),
+        ]);
+    }
+
+    /**
+     * Toggle status hot item pada akun.
+     */
+    public function toggleHot(int $account_id): JsonResponse
+    {
+        $account = Account::findOrFail($account_id);
+        $account->update(['is_hot' => ! $account->is_hot]);
+
+        return response()->json([
+            'message' => 'Status Hot Item berhasil diperbarui.',
+            'is_hot' => $account->is_hot,
         ]);
     }
 
