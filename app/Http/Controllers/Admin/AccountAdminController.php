@@ -41,6 +41,9 @@ class AccountAdminController extends Controller
         }
 
         $accounts = $query->paginate(20);
+        $accounts->getCollection()->each(function ($account) {
+            $account->makeVisible(['account_email', 'email_password', 'game_password']);
+        });
 
         return response()->json($accounts);
     }
@@ -63,24 +66,31 @@ class AccountAdminController extends Controller
             'images.*' => 'nullable|image|max:4096',
         ]);
 
-        $imagePath = null;
-        $imagesPaths = [];
-
-        // Upload multiple images jika ada
+        $newUploadedPaths = [];
         if ($request->hasFile('images')) {
             foreach ($request->file('images') as $file) {
-                $imagesPaths[] = $file->store('accounts', 'public');
+                $newUploadedPaths[] = $file->store('accounts', 'public');
             }
+        } elseif ($request->hasFile('image')) {
+            $newUploadedPaths[] = $request->file('image')->store('accounts', 'public');
         }
 
-        // Upload single image (jika diunggah)
-        if ($request->hasFile('image')) {
-            $imagePath = $request->file('image')->store('accounts', 'public');
-            if (empty($imagesPaths)) {
-                $imagesPaths[] = $imagePath;
+        $finalImages = [];
+        if ($request->filled('images_manifest')) {
+            $manifest = json_decode($request->input('images_manifest'), true);
+            if (is_array($manifest)) {
+                foreach ($manifest as $item) {
+                    if (($item['type'] ?? '') === 'new' && isset($item['new_index'])) {
+                        $idx = (int) $item['new_index'];
+                        if (isset($newUploadedPaths[$idx])) {
+                            $finalImages[] = $newUploadedPaths[$idx];
+                        }
+                    }
+                }
             }
-        } elseif (! empty($imagesPaths)) {
-            $imagePath = $imagesPaths[0];
+        }
+        if (empty($finalImages)) {
+            $finalImages = $newUploadedPaths;
         }
 
         $account = Account::create([
@@ -88,8 +98,8 @@ class AccountAdminController extends Controller
             'title' => $validated['title'],
             'price' => $validated['price'],
             'description' => $validated['description'] ?? null,
-            'image_url' => $imagePath,
-            'images' => ! empty($imagesPaths) ? $imagesPaths : null,
+            'image_url' => ! empty($finalImages) ? $finalImages[0] : null,
+            'images' => ! empty($finalImages) ? $finalImages : null,
             'is_hot' => $request->boolean('is_hot'),
             'account_email' => $validated['account_email'],
             'email_password' => $validated['email_password'],
@@ -133,31 +143,74 @@ class AccountAdminController extends Controller
             'game_password' => 'sometimes|required|string|max:255',
             'status' => 'sometimes|required|in:tersedia,tertunda,terjual',
             'is_hot' => 'nullable|boolean',
+            'images_manifest' => 'nullable|string',
             'image' => 'nullable|image|max:4096',
             'images.*' => 'nullable|image|max:4096',
         ]);
 
-        // Multiple images upload
+        $newUploadedPaths = [];
         if ($request->hasFile('images')) {
-            $imagesPaths = [];
             foreach ($request->file('images') as $file) {
-                $imagesPaths[] = $file->store('accounts', 'public');
+                $newUploadedPaths[] = $file->store('accounts', 'public');
             }
-            $validated['images'] = $imagesPaths;
-            if (empty($validated['image_url']) && ! empty($imagesPaths)) {
-                $validated['image_url'] = $imagesPaths[0];
-            }
+        } elseif ($request->hasFile('image')) {
+            $newUploadedPaths[] = $request->file('image')->store('accounts', 'public');
         }
 
-        if ($request->hasFile('image')) {
-            if ($account->image_url && Storage::disk('public')->exists($account->image_url)) {
-                Storage::disk('public')->delete($account->image_url);
+        if ($request->has('images_manifest')) {
+            $finalImages = [];
+            $manifest = json_decode($request->input('images_manifest'), true);
+            if (is_array($manifest)) {
+                foreach ($manifest as $item) {
+                    if (($item['type'] ?? '') === 'existing' && ! empty($item['path'])) {
+                        $finalImages[] = $item['path'];
+                    } elseif (($item['type'] ?? '') === 'new' && isset($item['new_index'])) {
+                        $idx = (int) $item['new_index'];
+                        if (isset($newUploadedPaths[$idx])) {
+                            $finalImages[] = $newUploadedPaths[$idx];
+                        }
+                    }
+                }
             }
-            $validated['image_url'] = $request->file('image')->store('accounts', 'public');
+
+            // Hapus file foto lama dari storage disk jika admin menghapusnya dari daftar
+            $oldImages = is_array($account->images) ? $account->images : ($account->image_url ? [$account->image_url] : []);
+            foreach ($oldImages as $oldImg) {
+                if (! in_array($oldImg, $finalImages)) {
+                    if (Storage::disk('public')->exists($oldImg)) {
+                        Storage::disk('public')->delete($oldImg);
+                    }
+                }
+            }
+
+            $validated['images'] = ! empty($finalImages) ? $finalImages : null;
+            $validated['image_url'] = ! empty($finalImages) ? $finalImages[0] : null;
+        } elseif (! empty($newUploadedPaths)) {
+            $validated['images'] = $newUploadedPaths;
+            $validated['image_url'] = $newUploadedPaths[0];
         }
 
         if ($request->has('is_hot')) {
             $validated['is_hot'] = $request->boolean('is_hot');
+        }
+
+        if (isset($validated['status'])) {
+            if ($validated['status'] === 'terjual') {
+                $validated['sold_at'] = $account->sold_at ?: now();
+            } elseif ($validated['status'] === 'tersedia') {
+                $validated['sold_at'] = null;
+            }
+        }
+
+        // Jangan hapus password atau email jika tidak sengaja terkirim kosong
+        if (array_key_exists('account_email', $validated) && empty($validated['account_email'])) {
+            unset($validated['account_email']);
+        }
+        if (array_key_exists('email_password', $validated) && empty($validated['email_password'])) {
+            unset($validated['email_password']);
+        }
+        if (array_key_exists('game_password', $validated) && empty($validated['game_password'])) {
+            unset($validated['game_password']);
         }
 
         $account->update($validated);
@@ -165,6 +218,34 @@ class AccountAdminController extends Controller
 
         return response()->json([
             'message' => 'Data akun game berhasil diperbarui.',
+            'account' => $account->fresh(['game']),
+        ]);
+    }
+
+    /**
+     * Mengubah status akun secara langsung (tersedia <-> terjual <-> tertunda).
+     */
+    public function toggleStatus(Request $request, int $account_id): JsonResponse
+    {
+        $account = Account::findOrFail($account_id);
+
+        $targetStatus = $request->input('status');
+        if (! in_array($targetStatus, ['tersedia', 'terjual', 'tertunda'])) {
+            $targetStatus = ($account->status === 'tersedia') ? 'terjual' : 'tersedia';
+        }
+
+        $updateData = ['status' => $targetStatus];
+        if ($targetStatus === 'terjual') {
+            $updateData['sold_at'] = $account->sold_at ?: now();
+        } elseif ($targetStatus === 'tersedia') {
+            $updateData['sold_at'] = null;
+        }
+
+        $account->update($updateData);
+
+        return response()->json([
+            'message' => 'Status akun #'.$account->account_id.' berhasil diubah menjadi '.strtoupper($targetStatus).'.',
+            'status' => $account->status,
             'account' => $account->fresh(['game']),
         ]);
     }

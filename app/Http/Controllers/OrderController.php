@@ -15,25 +15,58 @@ class OrderController extends Controller
     public function status(Request $request)
     {
         $search = $request->query('search');
+        $pin = trim((string) $request->query('pin', ''));
         $order = null;
+        $pinRequired = false;
+        $pinError = false;
+        $isUnlocked = false;
 
         if ($search) {
             // Menghilangkan awalan ORD- jika pembeli mengetik ORD-1
             $cleanSearch = preg_replace('/[^0-9]/', '', $search);
 
             $order = Order::with(['account.game', 'payment'])
-                ->where('order_id', $cleanSearch)
-                ->orWhere('delivery_email', $search)
+                ->where(function ($q) use ($cleanSearch, $search) {
+                    if (! empty($cleanSearch)) {
+                        $q->orWhere('order_id', $cleanSearch);
+                    }
+                    $q->orWhere('delivery_email', $search);
+                })
+                ->latest('order_id')
                 ->first();
 
-            if ($order && $order->status === 'valid' && $order->account) {
-                $order->account->makeVisible(['account_email', 'email_password', 'game_password']);
+            if ($order) {
+                if (! empty($order->security_pin)) {
+                    if ($pin !== '') {
+                        if ($pin === $order->security_pin) {
+                            $isUnlocked = true;
+                            if ($order->status === 'valid' && $order->account) {
+                                $order->account->makeVisible(['account_email', 'email_password', 'game_password']);
+                            }
+                        } else {
+                            $pinError = true;
+                            $pinRequired = true;
+                        }
+                    } else {
+                        $pinRequired = true;
+                    }
+                } else {
+                    // Pesanan lawas tanpa security PIN
+                    $isUnlocked = true;
+                    if ($order->status === 'valid' && $order->account) {
+                        $order->account->makeVisible(['account_email', 'email_password', 'game_password']);
+                    }
+                }
             }
         }
 
         return Inertia::render('OrderStatus', [
             'order' => $order,
             'searchQuery' => $search ?? '',
+            'pinQuery' => $pin,
+            'pinRequired' => $pinRequired,
+            'pinError' => $pinError,
+            'isUnlocked' => $isUnlocked,
         ]);
     }
 
@@ -62,18 +95,22 @@ class OrderController extends Controller
             $imagePath = $request->file('proof_image')->store('payments', 'public');
         }
 
-        $order = DB::transaction(function () use ($request, $account, $paymentMethod, $imagePath) {
+        // Generate 6-digit random security PIN
+        $securityPin = str_pad((string) random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
+
+        $order = DB::transaction(function () use ($request, $account, $paymentMethod, $imagePath, $securityPin) {
             // 1. Buat atau cari data Buyer berdasarkan email
             $buyer = Buyer::firstOrCreate(
                 ['email' => $request->delivery_email],
                 ['name' => 'Pembeli '.rand(100, 999)]
             );
 
-            // 2. Simpan Data Pesanan Baru
+            // 2. Simpan Data Pesanan Baru dengan Security PIN
             $newOrder = Order::create([
                 'buyer_id' => $buyer->buyer_id,
                 'account_id' => $request->account_id,
                 'delivery_email' => $request->delivery_email,
+                'security_pin' => $securityPin,
                 'status' => 'menunggu_konfirmasi',
             ]);
 
@@ -100,6 +137,9 @@ class OrderController extends Controller
         $cleanId = preg_replace('/[^0-9]/', '', (string) $order_id);
         $order = Order::with(['account.game', 'payment', 'buyer'])
             ->findOrFail($cleanId);
+
+        // Security PIN hanya ditampilkan pada halaman Invoice bagi pembeli yang baru checkout
+        $order->makeVisible('security_pin');
 
         return Inertia::render('OrderInvoice', [
             'order' => $order,

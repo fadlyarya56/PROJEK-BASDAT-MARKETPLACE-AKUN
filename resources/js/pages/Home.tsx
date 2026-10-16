@@ -225,7 +225,7 @@ export default function Home({ hotItems = [] }: HomeProps) {
                                 </span>
                             </div>
                             <p className="text-xs text-dropbox-muted">
-                                Akun paling dicari dan siap dimainkan. Bergeser otomatis setiap 4 detik.
+                                Akun paling dicari dan siap dimainkan.
                             </p>
                         </div>
 
@@ -259,7 +259,7 @@ export default function Home({ hotItems = [] }: HomeProps) {
                                 <div className="md:col-span-5">
                                     <Link 
                                         href={`/katalog/${activeHotAccount.account_id}`}
-                                        className="aspect-video sm:aspect-square bg-[#0A0D15] rounded-2xl overflow-hidden border border-dropbox-border relative block group"
+                                        className="aspect-video sm:aspect-[4/5] bg-[#0A0D15] rounded-2xl overflow-hidden border border-dropbox-border relative block group"
                                     >
                                         <img
                                             src={

@@ -6,6 +6,7 @@ import { resolveStorageUrl } from '@/lib/utils';
 interface OrderData {
     order_id: number;
     delivery_email: string;
+    security_pin?: string;
     status: string;
     created_at: string;
     account?: {
@@ -37,6 +38,7 @@ interface OrderInvoiceProps {
 
 export default function OrderInvoice({ order }: OrderInvoiceProps) {
     const [copied, setCopied] = useState(false);
+    const [copiedPin, setCopiedPin] = useState(false);
     const [showProofModal, setShowProofModal] = useState(false);
 
     const orderCode = `ORD-${order.order_id}`;
@@ -44,7 +46,15 @@ export default function OrderInvoice({ order }: OrderInvoiceProps) {
     const handleCopyCode = () => {
         navigator.clipboard.writeText(orderCode);
         setCopied(true);
-        setTimeout(() => setCopied(false), 2500);
+        setTimeout(() => setCopied(false), 2000);
+    };
+
+    const handleCopyPin = () => {
+        if (order.security_pin) {
+            navigator.clipboard.writeText(order.security_pin);
+            setCopiedPin(true);
+            setTimeout(() => setCopiedPin(false), 2000);
+        }
     };
 
     const handlePrint = () => {
@@ -111,30 +121,60 @@ export default function OrderInvoice({ order }: OrderInvoiceProps) {
                             </p>
                         </div>
 
-                        {/* Kotak Kode Pesanan Interaktif */}
-                        <div className="pt-2">
-                            <div className="inline-flex items-center gap-3 bg-[#0A0D15] border border-blue-500/40 rounded-2xl p-3 px-5 shadow-inner">
+                        {/* Kotak Kode Pesanan & PIN Keamanan Interaktif */}
+                        <div className="pt-2 flex flex-col sm:flex-row items-center justify-center gap-3">
+                            <div className="w-full sm:w-auto inline-flex items-center justify-between gap-3 bg-[#0A0D15] border border-blue-500/40 rounded-2xl p-3 px-5 shadow-inner">
                                 <div className="text-left">
                                     <span className="text-[10px] text-dropbox-muted block font-semibold uppercase tracking-wider">
-                                        KODE PESANAN KAMU
+                                        KODE PESANAN
                                     </span>
-                                    <span className="text-xl sm:text-2xl font-black text-white tracking-wider font-mono">
+                                    <span className="text-lg sm:text-xl font-black text-white tracking-wider font-mono">
                                         {orderCode}
                                     </span>
                                 </div>
                                 <button
                                     type="button"
                                     onClick={handleCopyCode}
-                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                                    className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
                                         copied
                                             ? 'bg-emerald-600 text-white'
                                             : 'bg-dropbox-accent hover:bg-blue-600 text-white shadow-md shadow-blue-900/30'
                                     }`}
                                 >
-                                    <span>{copied ? 'Tersalin!' : 'Salin Kode'}</span>
+                                    <span>{copied ? 'Tersalin!' : 'Salin'}</span>
                                 </button>
                             </div>
+
+                            {order.security_pin && (
+                                <div className="w-full sm:w-auto inline-flex items-center justify-between gap-3 bg-[#0A0D15] border border-amber-500/50 rounded-2xl p-3 px-5 shadow-inner">
+                                    <div className="text-left">
+                                        <span className="text-[10px] text-amber-400 block font-semibold uppercase tracking-wider">
+                                            PIN KEAMANAN (RAHASIA)
+                                        </span>
+                                        <span className="text-lg sm:text-xl font-black text-amber-300 tracking-widest font-mono">
+                                            {order.security_pin}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleCopyPin}
+                                        className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+                                            copiedPin
+                                                ? 'bg-emerald-600 text-white'
+                                                : 'bg-amber-600 hover:bg-amber-500 text-white shadow-md shadow-amber-900/30'
+                                        }`}
+                                    >
+                                        <span>{copiedPin ? 'Tersalin!' : 'Salin PIN'}</span>
+                                    </button>
+                                </div>
+                            )}
                         </div>
+
+                        {order.security_pin && (
+                            <p className="text-[11px] text-amber-300/90 bg-amber-950/40 border border-amber-800/50 rounded-xl py-2 px-3 max-w-lg mx-auto">
+                                <strong>PENTING:</strong> Simpan PIN Keamanan 6-digit di atas. Anda wajib memasukkan PIN ini untuk membuka kredensial email &amp; password akun di halaman Lacak Pesanan.
+                            </p>
+                        )}
                     </div>
                 </div>
 
@@ -274,7 +314,7 @@ export default function OrderInvoice({ order }: OrderInvoiceProps) {
                 <div className="space-y-3 pt-2">
                     {/* Tombol Utama: Langsung Menuju Halaman Lacak Pesanan */}
                     <Link
-                        href={`/order-status?search=${orderCode}`}
+                        href={`/order-status?search=${orderCode}${order.security_pin ? `&pin=${order.security_pin}` : ''}`}
                         className="w-full bg-dropbox-accent hover:bg-blue-600 text-white font-extrabold text-sm py-4 rounded-2xl transition shadow-lg shadow-blue-900/40 flex items-center justify-center gap-2 border border-blue-400/30 text-center"
                     >
                         <span>Lacak Status Pesanan Sekarang</span>

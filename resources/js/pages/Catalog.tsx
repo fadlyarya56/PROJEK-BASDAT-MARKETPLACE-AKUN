@@ -150,21 +150,19 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
 
                 {/* 2. TOOLBAR FILTER HARGA & SORTIR */}
                 <div className="bg-[#111726] border border-dropbox-border rounded-2xl p-4 sm:p-5 space-y-4 shadow-sm">
-                    <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4">
                         
                         {/* Kiri: Filter Rentang Harga (Quick Chips) */}
-                        <div className="space-y-2">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                    Rentang Harga:
-                                </span>
-                            </div>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                            <span className="text-xs font-bold text-white uppercase tracking-wider whitespace-nowrap">
+                                Rentang Harga:
+                            </span>
 
                             <div className="flex flex-wrap items-center gap-2">
                                 <button
                                     type="button"
                                     onClick={() => handlePresetChange('all')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition border ${
                                         pricePreset === 'all'
                                             ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
                                             : 'bg-[#0B0F19] text-dropbox-muted border-dropbox-border hover:text-white hover:border-slate-600'
@@ -175,7 +173,7 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                                 <button
                                     type="button"
                                     onClick={() => handlePresetChange('under_200')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition border ${
                                         pricePreset === 'under_200'
                                             ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
                                             : 'bg-[#0B0F19] text-dropbox-muted border-dropbox-border hover:text-white hover:border-slate-600'
@@ -186,7 +184,7 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                                 <button
                                     type="button"
                                     onClick={() => handlePresetChange('200_500')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition border ${
                                         pricePreset === '200_500'
                                             ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
                                             : 'bg-[#0B0F19] text-dropbox-muted border-dropbox-border hover:text-white hover:border-slate-600'
@@ -197,7 +195,7 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                                 <button
                                     type="button"
                                     onClick={() => handlePresetChange('above_500')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition border ${
                                         pricePreset === 'above_500'
                                             ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
                                             : 'bg-[#0B0F19] text-dropbox-muted border-dropbox-border hover:text-white hover:border-slate-600'
@@ -208,7 +206,7 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                                 <button
                                     type="button"
                                     onClick={() => handlePresetChange('custom')}
-                                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition border ${
+                                    className={`px-3 py-2 rounded-xl text-xs font-semibold transition border ${
                                         pricePreset === 'custom'
                                             ? 'bg-dropbox-accent text-white border-dropbox-accent shadow-xs'
                                             : 'bg-[#0B0F19] text-dropbox-muted border-dropbox-border hover:text-white hover:border-slate-600'
@@ -221,21 +219,19 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
 
                         {/* Kanan: Dropdown Sortir */}
                         <div className="flex flex-wrap items-center gap-3">
-                            <div className="flex items-center gap-2">
-                                <span className="text-xs font-bold text-white uppercase tracking-wider">
-                                    Sortir:
-                                </span>
-                                <select
-                                    value={sortBy}
-                                    onChange={(e) => setSortBy(e.target.value as SortOption)}
-                                    className="bg-[#0B0F19] border border-dropbox-border text-white text-xs font-medium rounded-xl px-3.5 py-2 outline-none focus:border-dropbox-accent transition cursor-pointer"
-                                >
-                                    <option value="newest">Terbaru ke Terlama</option>
-                                    <option value="oldest">Terlama ke Terbaru</option>
-                                    <option value="price_asc">Harga: Terendah ke Tertinggi</option>
-                                    <option value="price_desc">Harga: Tertinggi ke Terendah</option>
-                                </select>
-                            </div>
+                            <span className="text-xs font-bold text-white uppercase tracking-wider whitespace-nowrap">
+                                Sortir:
+                            </span>
+                            <select
+                                value={sortBy}
+                                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                                className="bg-[#0B0F19] border border-dropbox-border text-white text-xs font-medium rounded-xl px-3.5 py-2 outline-none focus:border-dropbox-accent transition cursor-pointer"
+                            >
+                                <option value="newest">Terbaru ke Terlama</option>
+                                <option value="oldest">Terlama ke Terbaru</option>
+                                <option value="price_asc">Harga: Terendah ke Tertinggi</option>
+                                <option value="price_desc">Harga: Tertinggi ke Terendah</option>
+                            </select>
 
                             {/* Tombol Reset Filter jika ada yang aktif */}
                             {isFiltered && (

@@ -78,6 +78,14 @@ interface GameItem {
     email_template: string | null;
 }
 
+interface ManagedImage {
+    id: string;
+    type: 'existing' | 'new';
+    previewUrl: string;
+    path?: string;
+    file?: File;
+}
+
 export default function AdminDashboard() {
     const [activeTab, setActiveTab] = useState<'overview' | 'payments' | 'accounts' | 'logs' | 'games'>('overview');
 
@@ -113,10 +121,9 @@ export default function AdminDashboard() {
         email_password: '',
         game_password: '',
         is_hot: false,
+        status: 'tersedia',
     });
-    const [accountImageFile, setAccountImageFile] = useState<File | null>(null);
-    const [accountMultipleFiles, setAccountMultipleFiles] = useState<FileList | null>(null);
-    const [filePreviewUrls, setFilePreviewUrls] = useState<string[]>([]);
+    const [managedImages, setManagedImages] = useState<ManagedImage[]>([]);
     const [showCredentials, setShowCredentials] = useState<{ [key: number]: boolean }>({});
 
     // Modal state for Edit Game
@@ -377,6 +384,30 @@ export default function AdminDashboard() {
         }
     };
 
+    const handleQuickStatusToggle = async (accountId: number, targetStatus?: string) => {
+        try {
+            const res = await fetch(`/admin/accounts/${accountId}/toggle-status`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': getCsrfToken(),
+                    Accept: 'application/json',
+                },
+                body: JSON.stringify(targetStatus ? { status: targetStatus } : {}),
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showNotify(data.message || 'Status akun berhasil diperbarui.');
+                loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
+                loadStats();
+            } else {
+                showNotify(data.message || 'Gagal mengubah status akun.', 'error');
+            }
+        } catch {
+            showNotify('Koneksi terganggu saat mengubah status.', 'error');
+        }
+    };
+
     const handleDeleteAccount = async (accountId: number) => {
         if (!confirm('Hapus akun ini dari sistem secara permanen?')) return;
         try {
@@ -412,47 +443,103 @@ export default function AdminDashboard() {
             email_password: '',
             game_password: '',
             is_hot: false,
+            status: 'tersedia',
         });
-        setAccountImageFile(null);
-        setAccountMultipleFiles(null);
-        setFilePreviewUrls([]);
+        setManagedImages([]);
         setIsAccountModalOpen(true);
     };
 
-    const openEditAccount = (acc: AccountItem) => {
+    const openEditAccount = async (acc: AccountItem) => {
         setEditingAccount(acc);
         setAccountForm({
             game_id: String(acc.game_id),
             title: acc.title,
             price: String(acc.price),
             description: acc.description || '',
-            account_email: acc.account_email,
+            account_email: acc.account_email || '',
             email_password: acc.email_password || '',
             game_password: acc.game_password || '',
             is_hot: !!acc.is_hot,
+            status: acc.status || 'tersedia',
         });
-        setAccountImageFile(null);
-        setAccountMultipleFiles(null);
-        setFilePreviewUrls([]);
+
+        // Muat gambar yang sudah ada ke dalam daftar managedImages
+        const initialImages: ManagedImage[] = [];
+        const rawList = (acc.images && acc.images.length > 0)
+            ? acc.images
+            : (acc.image_url ? [acc.image_url] : []);
+
+        rawList.forEach((path, idx) => {
+            if (path) {
+                initialImages.push({
+                    id: `existing-${idx}-${path}`,
+                    type: 'existing',
+                    previewUrl: resolveStorageUrl(path) || '',
+                    path: path,
+                });
+            }
+        });
+        setManagedImages(initialImages);
         setIsAccountModalOpen(true);
+
+        // Fetch fresh detail dari server agar email & password akun yang ada di database terisi lengkap
+        try {
+            const res = await fetch(`/admin/accounts/${acc.account_id}`);
+            if (res.ok) {
+                const fresh = await res.json();
+                setAccountForm(prev => ({
+                    ...prev,
+                    account_email: fresh.account_email ?? prev.account_email,
+                    email_password: fresh.email_password ?? prev.email_password,
+                    game_password: fresh.game_password ?? prev.game_password,
+                }));
+            }
+        } catch {
+            // Keep current values
+        }
     };
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleAddNewImages = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
-        if (files && files.length > 0) {
-            setAccountMultipleFiles(files);
-            setAccountImageFile(files[0]);
-
-            const urls: string[] = [];
-            for (let i = 0; i < files.length; i++) {
-                urls.push(URL.createObjectURL(files[i]));
-            }
-            setFilePreviewUrls(urls);
-        } else {
-            setAccountMultipleFiles(null);
-            setAccountImageFile(null);
-            setFilePreviewUrls([]);
+        if (!files || files.length === 0) return;
+        const added: ManagedImage[] = [];
+        for (let i = 0; i < files.length; i++) {
+            const file = files[i];
+            added.push({
+                id: `new-${Date.now()}-${i}-${file.name}`,
+                type: 'new',
+                previewUrl: URL.createObjectURL(file),
+                file: file,
+            });
         }
+        setManagedImages(prev => [...prev, ...added]);
+        e.target.value = '';
+    };
+
+    const handleMoveImage = (index: number, direction: 'left' | 'right') => {
+        const target = direction === 'left' ? index - 1 : index + 1;
+        if (target < 0 || target >= managedImages.length) return;
+        setManagedImages(prev => {
+            const arr = [...prev];
+            const item = arr[index];
+            arr[index] = arr[target];
+            arr[target] = item;
+            return arr;
+        });
+    };
+
+    const handleSetAsCover = (index: number) => {
+        if (index === 0) return;
+        setManagedImages(prev => {
+            const arr = [...prev];
+            const [item] = arr.splice(index, 1);
+            arr.unshift(item);
+            return arr;
+        });
+    };
+
+    const handleDeleteImage = (index: number) => {
+        setManagedImages(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleSaveAccount = async (e: React.FormEvent) => {
@@ -466,16 +553,24 @@ export default function AdminDashboard() {
         formData.append('email_password', accountForm.email_password);
         formData.append('game_password', accountForm.game_password);
         formData.append('is_hot', accountForm.is_hot ? '1' : '0');
+        formData.append('status', accountForm.status);
 
-        if (accountImageFile) {
-            formData.append('image', accountImageFile);
-        }
-
-        if (accountMultipleFiles && accountMultipleFiles.length > 0) {
-            for (let i = 0; i < accountMultipleFiles.length; i++) {
-                formData.append('images[]', accountMultipleFiles[i]);
+        // Susun manifest urutan foto & kumpulkan file baru
+        const newFiles: File[] = [];
+        const manifest = managedImages.map(img => {
+            if (img.type === 'existing') {
+                return { type: 'existing', path: img.path };
+            } else {
+                const newIdx = newFiles.length;
+                newFiles.push(img.file!);
+                return { type: 'new', new_index: newIdx };
             }
-        }
+        });
+
+        formData.append('images_manifest', JSON.stringify(manifest));
+        newFiles.forEach(file => {
+            formData.append('images[]', file);
+        });
 
         const url = editingAccount 
             ? `/admin/accounts/${editingAccount.account_id}` 
@@ -495,9 +590,7 @@ export default function AdminDashboard() {
                 showNotify(data.message || 'Data akun berhasil disimpan.');
                 setIsAccountModalOpen(false);
                 setEditingAccount(null);
-                setAccountMultipleFiles(null);
-                setAccountImageFile(null);
-                setFilePreviewUrls([]);
+                setManagedImages([]);
                 loadAccounts(accountGameFilter, accountStatusFilter, accountSearch);
                 loadStats();
             } else {
@@ -603,7 +696,9 @@ export default function AdminDashboard() {
                                 className="text-xs font-bold text-slate-300 hover:text-white border border-dropbox-border bg-[#111726] hover:bg-[#182033] px-3.5 py-2 rounded-xl transition flex items-center gap-1.5"
                             >
                                 <span>Katalog Web</span>
-                                <span className="text-dropbox-muted text-xs">&nearr;</span>
+                                <svg className="w-3.5 h-3.5 text-dropbox-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
                             </a>
                             <button
                                 onClick={handleLogout}
@@ -1129,15 +1224,29 @@ export default function AdminDashboard() {
                                                         </button>
                                                     </td>
 
-                                                    {/* Status Badge */}
+                                                    {/* Status Switcher (Langsung Ubah Tersedia <-> Terjual) */}
                                                     <td className="p-3">
-                                                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                                                            acc.status === 'tersedia' ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60' :
-                                                            acc.status === 'terjual' ? 'bg-purple-950/80 text-purple-400 border-purple-700/60' :
-                                                            'bg-amber-950/80 text-amber-400 border-amber-700/60'
-                                                        }`}>
-                                                            {acc.status}
-                                                        </span>
+                                                        <div className="space-y-1">
+                                                            <select
+                                                                value={acc.status}
+                                                                onChange={(e) => handleQuickStatusToggle(acc.account_id, e.target.value)}
+                                                                className={`text-[10px] font-extrabold uppercase tracking-wider px-2 py-1 rounded-lg border outline-none cursor-pointer transition ${
+                                                                    acc.status === 'tersedia'
+                                                                        ? 'bg-emerald-950/80 text-emerald-400 border-emerald-700/60 hover:border-emerald-500'
+                                                                        : acc.status === 'terjual'
+                                                                            ? 'bg-purple-950/80 text-purple-400 border-purple-700/60 hover:border-purple-500'
+                                                                            : 'bg-amber-950/80 text-amber-400 border-amber-700/60 hover:border-amber-500'
+                                                                }`}
+                                                                title="Klik untuk mengubah status akun langsung"
+                                                            >
+                                                                <option value="tersedia" className="bg-[#0B0F19] text-emerald-400">Tersedia</option>
+                                                                <option value="terjual" className="bg-[#0B0F19] text-purple-400">Terjual</option>
+                                                                <option value="tertunda" className="bg-[#0B0F19] text-amber-400">Tertunda</option>
+                                                            </select>
+                                                            <div className="text-[9px] text-dropbox-muted">
+                                                                {acc.status === 'tersedia' ? 'Di Katalog' : acc.status === 'terjual' ? 'Sudah Laku' : 'Pending'}
+                                                            </div>
+                                                        </div>
                                                     </td>
 
                                                     {/* Hot Item Toggle */}
@@ -1435,6 +1544,26 @@ export default function AdminDashboard() {
                                 </div>
 
                                 <div>
+                                    <label htmlFor="form-status" className="block font-bold text-white uppercase text-[10px] tracking-wider mb-1.5">
+                                        Status Ketersediaan Akun <span className="text-rose-400">*</span>
+                                    </label>
+                                    <select
+                                        id="form-status"
+                                        value={accountForm.status}
+                                        onChange={e => setAccountForm({ ...accountForm, status: e.target.value })}
+                                        className="w-full bg-[#0A0D15] border border-dropbox-border rounded-xl p-3 text-xs text-white outline-none focus:border-dropbox-accent cursor-pointer"
+                                        required
+                                    >
+                                        <option value="tersedia">Tersedia (Tampil di Katalog Web)</option>
+                                        <option value="terjual">Terjual (Tandai Laku / Non-Aktif)</option>
+                                        <option value="tertunda">Tertunda (Sedang dalam Proses Pembayaran)</option>
+                                    </select>
+                                    <p className="text-[11px] text-dropbox-muted mt-1">
+                                        Pilih <strong>Terjual</strong> jika akun sudah dibeli pembeli lewat WhatsApp/offline di luar situs agar tidak dibeli orang lain.
+                                    </p>
+                                </div>
+
+                                <div>
                                     <label htmlFor="form-desc" className="block font-bold text-white uppercase text-[10px] tracking-wider mb-1.5">
                                         Deskripsi Spesifikasi Lengkap
                                     </label>
@@ -1490,41 +1619,121 @@ export default function AdminDashboard() {
                                     </div>
                                 </div>
 
-                                {/* Upload Foto Akun dengan Pratinjau Thumbnail */}
-                                <div className="space-y-2">
-                                    <label htmlFor="form-image" className="block font-bold text-white uppercase text-[10px] tracking-wider">
-                                        Unggah Foto Akun (Bisa Pilih Banyak Foto Sekaligus)
-                                    </label>
-                                    <input
-                                        id="form-image"
-                                        type="file"
-                                        accept="image/*"
-                                        multiple
-                                        onChange={handleFileChange}
-                                        className="w-full text-xs text-slate-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
-                                    />
-                                    <p className="text-[11px] text-dropbox-muted">
-                                        Tahan tombol Ctrl / Shift untuk memilih beberapa foto. Foto pertama yang dipilih otomatis menjadi cover utama di katalog.
-                                    </p>
+                                {/* Gallery Foto Akun & Atur Urutan */}
+                                <div className="space-y-3 p-4 bg-[#0A0D15] rounded-2xl border border-dropbox-border">
+                                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                        <div>
+                                            <label className="block font-bold text-white uppercase text-[10px] tracking-wider">
+                                                Kelola Galeri &amp; Urutan Foto Akun
+                                            </label>
+                                            <p className="text-[11px] text-dropbox-muted">
+                                                Foto di urutan pertama otomatis menjadi <strong>Cover Utama</strong> di katalog. Gunakan tombol panah untuk menukar posisi.
+                                            </p>
+                                        </div>
 
-                                    {/* Real-time Image Previews */}
-                                    {filePreviewUrls.length > 0 && (
-                                        <div className="pt-2">
-                                            <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-wider block mb-2">
-                                                {filePreviewUrls.length} Foto Terpilih:
-                                            </span>
-                                            <div className="flex items-center gap-2.5 overflow-x-auto pb-1 scrollbar-thin">
-                                                {filePreviewUrls.map((url, idx) => (
-                                                    <div key={idx} className="relative w-16 h-16 rounded-xl overflow-hidden border border-dropbox-border flex-shrink-0 bg-black">
-                                                        <img src={url} alt="" className="w-full h-full object-cover" />
-                                                        {idx === 0 && (
-                                                            <span className="absolute bottom-0 inset-x-0 bg-blue-600 text-white text-[9px] font-black text-center py-0.5">
-                                                                COVER
+                                        <label className="cursor-pointer inline-flex items-center gap-1.5 px-3.5 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-xs font-bold transition shadow-sm self-start sm:self-auto flex-shrink-0">
+                                            <span>+ Tambah Foto</span>
+                                            <input
+                                                type="file"
+                                                accept="image/*"
+                                                multiple
+                                                onChange={handleAddNewImages}
+                                                className="hidden"
+                                            />
+                                        </label>
+                                    </div>
+
+                                    {managedImages.length > 0 ? (
+                                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+                                            {managedImages.map((img, idx) => (
+                                                <div
+                                                    key={img.id}
+                                                    className={`relative rounded-xl overflow-hidden border bg-[#111726] flex flex-col justify-between group shadow-sm transition ${
+                                                        idx === 0
+                                                            ? 'border-blue-500 ring-1 ring-blue-500/50'
+                                                            : 'border-dropbox-border hover:border-slate-600'
+                                                    }`}
+                                                >
+                                                    {/* Image Preview */}
+                                                    <div className="aspect-[4/5] relative overflow-hidden bg-black flex items-center justify-center">
+                                                        <img
+                                                            src={img.previewUrl}
+                                                            alt=""
+                                                            className="w-full h-full object-cover"
+                                                        />
+
+                                                        {/* Badge Cover */}
+                                                        {idx === 0 ? (
+                                                            <span className="absolute top-1.5 left-1.5 bg-blue-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded-md shadow-md tracking-wider">
+                                                                COVER UTAMA
+                                                            </span>
+                                                        ) : (
+                                                            <span className="absolute top-1.5 left-1.5 bg-black/70 text-slate-300 text-[9px] font-bold px-1.5 py-0.5 rounded-md">
+                                                                #{idx + 1}
                                                             </span>
                                                         )}
+
+                                                        {/* Tombol Hapus */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleDeleteImage(idx)}
+                                                            className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-rose-600/90 hover:bg-rose-600 text-white flex items-center justify-center text-xs transition shadow-md"
+                                                            title="Hapus foto ini"
+                                                        >
+                                                            ✕
+                                                        </button>
                                                     </div>
-                                                ))}
-                                            </div>
+
+                                                    {/* Toolbar Reorder Bawah */}
+                                                    <div className="p-1.5 bg-[#0D121F] border-t border-dropbox-border/80 flex items-center justify-between text-[10px]">
+                                                        <div className="flex items-center gap-1">
+                                                            <button
+                                                                type="button"
+                                                                disabled={idx === 0}
+                                                                onClick={() => handleMoveImage(idx, 'left')}
+                                                                className="w-6 h-6 rounded-lg bg-[#182033] hover:bg-blue-600 disabled:opacity-30 disabled:hover:bg-[#182033] text-white flex items-center justify-center transition font-bold"
+                                                                title="Geser ke kiri / prioritaskan urutan"
+                                                            >
+                                                                &#10094;
+                                                            </button>
+                                                            <button
+                                                                type="button"
+                                                                disabled={idx === managedImages.length - 1}
+                                                                onClick={() => handleMoveImage(idx, 'right')}
+                                                                className="w-6 h-6 rounded-lg bg-[#182033] hover:bg-blue-600 disabled:opacity-30 disabled:hover:bg-[#182033] text-white flex items-center justify-center transition font-bold"
+                                                                title="Geser ke kanan / turunkan urutan"
+                                                            >
+                                                                &#10095;
+                                                            </button>
+                                                        </div>
+
+                                                        {idx !== 0 && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => handleSetAsCover(idx)}
+                                                                className="text-[9px] font-bold text-blue-400 hover:text-blue-300 hover:underline px-1"
+                                                                title="Jadikan foto ini cover utama di katalog"
+                                                            >
+                                                                Set Cover
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-8 border border-dashed border-dropbox-border rounded-xl">
+                                            <p className="text-xs text-dropbox-muted mb-2">Belum ada foto yang ditambahkan untuk akun ini.</p>
+                                            <label className="cursor-pointer inline-flex items-center gap-1.5 px-4 py-2 bg-[#182033] hover:bg-[#202b44] text-white rounded-xl text-xs font-bold transition border border-dropbox-border">
+                                                <span>Pilih Foto dari Komputer</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    multiple
+                                                    onChange={handleAddNewImages}
+                                                    className="hidden"
+                                                />
+                                            </label>
                                         </div>
                                     )}
                                 </div>

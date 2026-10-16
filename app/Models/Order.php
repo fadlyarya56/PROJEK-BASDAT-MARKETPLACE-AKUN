@@ -17,7 +17,12 @@ class Order extends Model
         'buyer_id',
         'account_id',
         'delivery_email',
+        'security_pin',
         'status', // menunggu | menunggu_konfirmasi | valid | ditolak
+    ];
+
+    protected $hidden = [
+        'security_pin',
     ];
 
     public function account()

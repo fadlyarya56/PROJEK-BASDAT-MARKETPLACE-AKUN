@@ -148,6 +148,7 @@ Route::prefix('admin')->group(function () {
         Route::get('/accounts/{account_id}', [AccountAdminController::class, 'show']);
         Route::match(['post', 'put'], '/accounts/{account_id}', [AccountAdminController::class, 'update']);
         Route::patch('/accounts/{account_id}/toggle-hot', [AccountAdminController::class, 'toggleHot']);
+        Route::patch('/accounts/{account_id}/toggle-status', [AccountAdminController::class, 'toggleStatus']);
         Route::delete('/accounts/{account_id}', [AccountAdminController::class, 'destroy']);
 
         // Kelola Game & Template Email
