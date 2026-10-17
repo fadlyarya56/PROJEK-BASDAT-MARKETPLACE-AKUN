@@ -25,18 +25,7 @@ Route::get('/', function () {
         ->where('is_hot', true)
         ->where('status', 'tersedia')
         ->latest('account_id')
-        ->take(8)
         ->get();
-
-    if ($hotItems->count() < 4) {
-        $fallback = Account::with('game')
-            ->where('status', 'tersedia')
-            ->whereNotIn('account_id', $hotItems->pluck('account_id'))
-            ->latest('account_id')
-            ->take(8 - $hotItems->count())
-            ->get();
-        $hotItems = $hotItems->concat($fallback);
-    }
 
     return Inertia::render('Home', [
         'hotItems' => $hotItems,

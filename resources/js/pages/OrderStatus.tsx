@@ -227,7 +227,11 @@ export default function OrderStatus({
 
                                             {pinError && (
                                                 <div className="p-3 bg-rose-950/60 border border-rose-800/80 rounded-xl text-rose-300 text-xs font-semibold flex items-center gap-2">
-                                                    <span>⚠️</span>
+                                                    <svg className="w-4 h-4 text-rose-400 shrink-0 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2}>
+                                                        <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                                                        <line x1="12" y1="9" x2="12" y2="13" />
+                                                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                                                    </svg>
                                                     <span>PIN Keamanan yang kamu masukkan salah. Silakan periksa kembali Invoice pesanan kamu.</span>
                                                 </div>
                                             )}
@@ -248,7 +252,12 @@ export default function OrderStatus({
                             </div>
                         ) : (
                             <div className="text-center py-12 bg-[#111726] border border-dropbox-border rounded-3xl space-y-2">
-                                <span className="text-3xl">🔎</span>
+                                <div className="w-12 h-12 mx-auto rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 flex items-center justify-center mb-1">
+                                    <svg className="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={1.75}>
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+                                    </svg>
+                                </div>
                                 <p className="text-slate-300 font-medium text-sm">
                                     Pesanan dengan kata kunci <span className="text-rose-400 font-bold">{searchQuery}</span> tidak ditemukan.
                                 </p>

@@ -1253,14 +1253,20 @@ export default function AdminDashboard() {
                                                                 rel="noreferrer"
                                                                 className="text-[11px] text-emerald-400 hover:text-emerald-300 flex items-center gap-1 font-mono my-0.5"
                                                             >
-                                                                <span>💬</span>
+                                                                <svg className="w-3 h-3 shrink-0 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                    <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" strokeLinecap="round" strokeLinejoin="round" />
+                                                                </svg>
                                                                 <span>{ord.buyer?.phone}</span>
                                                             </a>
                                                         ) : (
                                                             <div className="text-[11px] text-dropbox-muted">{ord.buyer?.phone || '-'}</div>
                                                         )}
-                                                        <div className="text-[10px] text-dropbox-muted truncate max-w-[160px]" title={ord.delivery_email || ord.buyer?.email}>
-                                                            ✉ {ord.delivery_email || ord.buyer?.email || '-'}
+                                                        <div className="text-[10px] text-dropbox-muted truncate max-w-[160px] flex items-center gap-1" title={ord.delivery_email || ord.buyer?.email}>
+                                                            <svg className="w-3 h-3 shrink-0 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                <rect width="20" height="16" x="2" y="4" rx="2" />
+                                                                <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                                                            </svg>
+                                                            <span className="truncate">{ord.delivery_email || ord.buyer?.email || '-'}</span>
                                                         </div>
                                                     </td>
 
@@ -1294,7 +1300,11 @@ export default function AdminDashboard() {
                                                                 onClick={() => setPreviewImage(ord.payment!.proof_image)}
                                                                 className="mt-1 text-[11px] font-bold text-dropbox-accent hover:text-blue-300 underline flex items-center gap-1 cursor-pointer"
                                                             >
-                                                                <span>📷 Pratinjau Bukti</span>
+                                                                <svg className="w-3 h-3 shrink-0 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2}>
+                                                                    <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                                                                    <circle cx="12" cy="13" r="3" />
+                                                                </svg>
+                                                                <span>Pratinjau Bukti</span>
                                                             </button>
                                                         ) : (
                                                             <span className="text-[11px] text-dropbox-muted italic block mt-0.5">

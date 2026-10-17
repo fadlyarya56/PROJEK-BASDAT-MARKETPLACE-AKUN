@@ -87,7 +87,13 @@ export default function Checkout({ account }: CheckoutProps) {
         return (
             <MainLayout>
                 <div className="max-w-xl mx-auto py-20 text-center space-y-4 bg-[#111726] border border-dropbox-border rounded-3xl p-8">
-                    <span className="text-4xl">🛒</span>
+                    <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                        <svg className="w-7 h-7 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={1.75}>
+                            <circle cx="8" cy="21" r="1"/>
+                            <circle cx="19" cy="21" r="1"/>
+                            <path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                    </div>
                     <h1 className="text-xl font-bold text-white">Tidak Ada Akun Yang Dipilih</h1>
                     <p className="text-xs text-dropbox-muted">
                         Silakan kembali ke katalog dan pilih akun game yang ingin kamu beli terlebih dahulu.

@@ -209,50 +209,50 @@ export default function Home({ hotItems = [] }: HomeProps) {
                     </div>
                 </section>
 
-                {/* 3. BAGIAN HOT ITEMS (AUTO-SLIDING / CAROUSEL DENGAN PILIHAN ADMIN) */}
-                <section 
-                    className="space-y-4"
-                    onMouseEnter={() => setIsHoveredHot(true)}
-                    onMouseLeave={() => setIsHoveredHot(false)}
-                >
-                    <div className="flex items-center justify-between">
-                        <div className="space-y-1">
-                            <div className="flex items-center gap-2">
-                                <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                                    Hot Items Minggu Ini
-                                </h2>
-                                <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-full uppercase">
-                                    PILIHAN ADMIN
-                                </span>
+                {/* 3. BAGIAN HOT ITEMS (HANYA MUNCUL JIKA ADA AKUN HOT PILIHAN ADMIN) */}
+                {hotItems && hotItems.length > 0 && activeHotAccount && (
+                    <section 
+                        className="space-y-4"
+                        onMouseEnter={() => setIsHoveredHot(true)}
+                        onMouseLeave={() => setIsHoveredHot(false)}
+                    >
+                        <div className="flex items-center justify-between">
+                            <div className="space-y-1">
+                                <div className="flex items-center gap-2">
+                                    <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                                        Hot Items Minggu Ini
+                                    </h2>
+                                    <span className="text-[10px] font-bold text-amber-300 bg-amber-950/80 border border-amber-800/80 px-2 py-0.5 rounded-full uppercase">
+                                        PILIHAN ADMIN
+                                    </span>
+                                </div>
+                                <p className="text-xs text-dropbox-muted">
+                                    Akun paling dicari dan siap dimainkan.
+                                </p>
                             </div>
-                            <p className="text-xs text-dropbox-muted">
-                                Akun paling dicari dan siap dimainkan.
-                            </p>
+
+                            {/* Tombol Panah Slider */}
+                            {hotItems.length > 1 && (
+                                <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={prevHot}
+                                        className="w-8 h-8 rounded-full bg-[#111726] hover:bg-dropbox-accent text-white border border-dropbox-border flex items-center justify-center transition text-xs shadow-sm"
+                                        aria-label="Item Sebelumnya"
+                                    >
+                                        &#10094;
+                                    </button>
+                                    <button
+                                        onClick={nextHot}
+                                        className="w-8 h-8 rounded-full bg-[#111726] hover:bg-dropbox-accent text-white border border-dropbox-border flex items-center justify-center transition text-xs shadow-sm"
+                                        aria-label="Item Selanjutnya"
+                                    >
+                                        &#10095;
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Tombol Panah Slider */}
-                        {hotItems.length > 1 && (
-                            <div className="flex items-center gap-2">
-                                <button
-                                    onClick={prevHot}
-                                    className="w-8 h-8 rounded-full bg-[#111726] hover:bg-dropbox-accent text-white border border-dropbox-border flex items-center justify-center transition text-xs shadow-sm"
-                                    aria-label="Item Sebelumnya"
-                                >
-                                    &#10094;
-                                </button>
-                                <button
-                                    onClick={nextHot}
-                                    className="w-8 h-8 rounded-full bg-[#111726] hover:bg-dropbox-accent text-white border border-dropbox-border flex items-center justify-center transition text-xs shadow-sm"
-                                    aria-label="Item Selanjutnya"
-                                >
-                                    &#10095;
-                                </button>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Hot Item Showcase Card Besar + Strip Carousel */}
-                    {activeHotAccount ? (
+                        {/* Hot Item Showcase Card Besar + Strip Carousel */}
                         <div className="bg-[#111726] border border-dropbox-border rounded-3xl p-6 sm:p-8 relative overflow-hidden shadow-xl">
                             <div className="grid grid-cols-1 md:grid-cols-12 gap-8 items-center">
                                 
@@ -334,12 +334,8 @@ export default function Home({ hotItems = [] }: HomeProps) {
 
                             </div>
                         </div>
-                    ) : (
-                        <div className="text-center py-12 bg-[#111726] border border-dropbox-border rounded-3xl">
-                            <p className="text-dropbox-muted text-xs">Belum ada akun yang ditandai sebagai Hot Item.</p>
-                        </div>
-                    )}
-                </section>
+                    </section>
+                )}
 
                 {/* 4. KEUNGGULAN GAMESTORE (FITUR & TRUST) */}
                 <section className="space-y-6 pt-4">

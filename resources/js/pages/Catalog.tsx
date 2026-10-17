@@ -122,8 +122,11 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     className="w-full bg-[#0B0F19] border border-dropbox-border rounded-xl px-4 py-3 pl-10 text-white text-xs placeholder:text-dropbox-muted focus:outline-none focus:border-dropbox-accent transition"
                                 />
-                                <span className="absolute left-3.5 top-3.5 text-dropbox-muted text-xs">
-                                    🔍
+                                <span className="absolute left-3.5 top-3.5 text-dropbox-muted pointer-events-none">
+                                    <svg className="w-4 h-4 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={2}>
+                                        <circle cx="11" cy="11" r="8" />
+                                        <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+                                    </svg>
                                 </span>
                                 {searchQuery && (
                                     <button
@@ -301,7 +304,12 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                         </div>
                     ) : (
                         <div className="text-center py-20 bg-[#111726] border border-dropbox-border rounded-3xl space-y-3">
-                            <span className="text-4xl">🔎</span>
+                            <div className="w-14 h-14 mx-auto rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-400 flex items-center justify-center">
+                                <svg className="w-7 h-7 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={1.75}>
+                                    <circle cx="11" cy="11" r="8" />
+                                    <path d="m21 21-4.3-4.3" strokeLinecap="round" />
+                                </svg>
+                            </div>
                             <p className="text-white font-bold text-sm">
                                 Tidak Ada Akun Yang Sesuai
                             </p>

@@ -85,7 +85,12 @@ export default function AccountDetail({ account, relatedAccounts = [] }: Account
                                     />
                                 ) : (
                                     <div className="flex flex-col items-center justify-center text-dropbox-muted p-8 text-center">
-                                        <span className="text-4xl mb-2">🎮</span>
+                                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 flex items-center justify-center mb-3">
+                                            <svg className="w-6 h-6 fill-none stroke-current" viewBox="0 0 24 24" strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round">
+                                                <rect x="2" y="6" width="20" height="12" rx="6" />
+                                                <path d="M6 12h4m-2-2v4m7-2h.01m3 0h.01" />
+                                            </svg>
+                                        </div>
                                         <p className="text-xs font-semibold text-white">Tidak Ada Foto Tambahan</p>
                                         <p className="text-[11px] text-dropbox-muted">Akun ini belum memiliki tangkapan layar spesifikasi.</p>
                                     </div>
