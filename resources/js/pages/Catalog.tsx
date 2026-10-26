@@ -100,15 +100,12 @@ export default function Catalog({ games = [], accounts = [] }: CatalogProps) {
                     <div className="absolute top-0 right-0 w-80 h-80 bg-blue-600/10 rounded-full blur-3xl pointer-events-none"></div>
 
                     <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-                        <div className="space-y-2 max-w-xl">
-                            <span className="text-[11px] font-bold text-blue-400 bg-blue-950/80 border border-blue-800/60 px-3 py-1 rounded-full uppercase tracking-wider inline-block">
-                                Verified Stock Marketplace
-                            </span>
+                        <div className="space-y-1.5 max-w-xl">
                             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
                                 Katalog Akun Game Siap Pakai
                             </h1>
                             <p className="text-dropbox-muted text-xs leading-relaxed">
-                                Gunakan filter harga dan sortir untuk menemukan akun game impianmu secara cepat dan presisi.
+                                Gunakan filter harga, kategori, dan sortir untuk menemukan akun game impianmu secara cepat dan presisi.
                             </p>
                         </div>
 

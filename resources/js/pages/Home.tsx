@@ -14,36 +14,24 @@ export default function Home({ hotItems = [] }: HomeProps) {
 
     const banners = [
         {
-            tag: 'PROMO SPESIAL HARI INI',
-            title: 'DISKON HINGGA 30% AKUN SULTAN',
-            subtitle: 'Koleksi akun Mobile Legends & eFootball skin langka, siap ranked & turnamen.',
-            code: 'HEMAT30',
+            title: 'Koleksi Akun Sultan & Skin Eksklusif',
+            subtitle: 'Stok pilihan Mobile Legends & eFootball siap tanding dengan harga terbaik minggu ini.',
             bgGradient: 'from-blue-900/60 via-[#111726] to-[#0B0F19]',
-            accentColor: 'text-blue-400',
-            badgeBg: 'bg-blue-950 border-blue-800 text-blue-300',
-            ctaText: 'Serbu Diskon',
+            ctaText: 'Jelajahi Koleksi',
             ctaLink: '/katalog',
         },
         {
-            tag: 'KEAMANAN PRIORITAS NO. 1',
-            title: 'GARANSI ANTI HACK-BACK 100%',
-            subtitle: 'Seluruh akun telah diverifikasi penuh. Pembelian aman dipandu langsung oleh CS.',
-            code: '100% AMAN',
+            title: 'Jaminan Aman Anti Hack-Back Seumur Hidup',
+            subtitle: 'Seluruh akun telah melalui proses verifikasi kepemilikan dan bind data sebelum ditransaksikan.',
             bgGradient: 'from-indigo-900/60 via-[#111726] to-[#0B0F19]',
-            accentColor: 'text-indigo-400',
-            badgeBg: 'bg-indigo-950 border-indigo-800 text-indigo-300',
-            ctaText: 'Pelajari Keamanan',
+            ctaText: 'Lihat Katalog Aman',
             ctaLink: '/katalog',
         },
         {
-            tag: 'PENGIRIMAN INSTAN 24/7',
-            title: 'TRANSAKSI CEPAT VIA QRIS & BANK',
-            subtitle: 'Setelah pembayaran terverifikasi, data login akun langsung masuk ke email kamu.',
-            code: 'INSTANT DELIVERY',
+            title: 'Verifikasi & Serah Terima Cepat 24/7',
+            subtitle: 'Didukung metode pembayaran QRIS & Bank dengan rilis kredensial terproteksi PIN keamanan.',
             bgGradient: 'from-emerald-900/60 via-[#111726] to-[#0B0F19]',
-            accentColor: 'text-emerald-400',
-            badgeBg: 'bg-emerald-950 border-emerald-800 text-emerald-300',
-            ctaText: 'Cari Akun Sekarang',
+            ctaText: 'Beli Sekarang',
             ctaLink: '/katalog',
         },
     ];
@@ -97,53 +85,52 @@ export default function Home({ hotItems = [] }: HomeProps) {
             <Head title="TempatAkun - Marketplace Jual Beli Akun Game Terpercaya" />
             <div className="space-y-12 sm:space-y-16 py-3 sm:py-4">
                 
-                {/* 1. HERO SECTION - Dark Gamer Vibe dengan 1 Tombol CTA Saja */}
-                <section className="relative rounded-3xl bg-[#0F1524] border border-dropbox-border p-6 sm:p-14 overflow-hidden shadow-2xl">
+                {/* 1. HERO SECTION - Dark Gamer Vibe & Immersive Atmosphere */}
+                <section className="relative rounded-3xl bg-[#0F1524] border border-dropbox-border p-6 sm:p-12 lg:p-14 overflow-hidden shadow-2xl">
                     {/* Background Glow Mesh Gaming */}
                     <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/15 rounded-full blur-[100px] pointer-events-none"></div>
                     <div className="absolute bottom-0 left-0 w-80 h-80 bg-indigo-600/10 rounded-full blur-[90px] pointer-events-none"></div>
 
-                    <div className="relative z-10 max-w-2xl space-y-6">
-                        {/* Live Pill Badge */}
-                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-950/80 border border-blue-800 text-blue-400 text-xs font-bold tracking-wide">
-                            <span className="w-2 h-2 rounded-full bg-blue-400 animate-pulse"></span>
-                            <span>OFFICIAL VERIFIED GAMING STORE</span>
+                    <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-8 lg:gap-12">
+                        {/* Sisi Kiri: Headline, Deskripsi, dan Metrik */}
+                        <div className="max-w-2xl space-y-6">
+                            <h1 className="text-3xl sm:text-5xl lg:text-[54px] font-black text-white tracking-tight leading-[1.08]">
+                                BELI AKUN GAME <br />
+                                <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-300">
+                                    INSTAN &amp; AMAN.
+                                </span>
+                            </h1>
+
+                            <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-lg font-normal">
+                                Dapatkan akun game favoritmu secara instan. Pembayaran praktis via QRIS &amp; Bank, serah terima data login terproteksi PIN dalam hitungan menit, dan bergaransi anti hack-back.
+                            </p>
+
+                            {/* Clean Stats Highlights */}
+                            <div className="pt-4 border-t border-dropbox-border/60 flex flex-wrap items-center gap-6 sm:gap-10 text-left">
+                                <div>
+                                    <div className="text-base sm:text-xl font-black text-white tracking-tight">Instan</div>
+                                    <div className="text-[11px] text-dropbox-muted">Serah Terima &lt; 5 Menit</div>
+                                </div>
+                                <div>
+                                    <div className="text-base sm:text-xl font-black text-white tracking-tight">100%</div>
+                                    <div className="text-[11px] text-dropbox-muted">Garansi Anti Hack</div>
+                                </div>
+                                <div>
+                                    <div className="text-base sm:text-xl font-black text-white tracking-tight">24/7</div>
+                                    <div className="text-[11px] text-dropbox-muted">Layanan CS Siaga</div>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Judul Besar Gamer */}
-                        <h1 className="text-3xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.1]">
-                            PERFORMANCE &amp; <br />
-                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400">
-                                VERIFIED ACCOUNTS
-                            </span>
-                        </h1>
-
-                        <p className="text-slate-300 text-xs sm:text-sm leading-relaxed max-w-lg font-normal">
-                            Platform transaksi jual beli akun game terpercaya. Dapatkan akun siap turnamen dengan data login 100% aman, terverifikasi, dan bergaransi anti hack-back seumur hidup.
-                        </p>
-
-                        {/* HANYA ADA SATU TOMBOL CTA: JELAJAHI KATALOG AKUN (Sesuai Request) */}
-                        <div className="pt-2">
+                        {/* Sisi Kanan: Tombol CTA Utama */}
+                        <div className="shrink-0 flex items-center lg:justify-end">
                             <Link
                                 href="/katalog"
-                                className="inline-flex items-center gap-3 bg-dropbox-accent hover:bg-blue-600 text-white font-extrabold text-sm px-8 py-4 rounded-full transition shadow-lg shadow-blue-600/30 border border-blue-400/30 group"
+                                className="inline-flex items-center gap-3 bg-dropbox-accent hover:bg-blue-600 text-white font-extrabold text-sm sm:text-base px-8 sm:px-10 py-4 sm:py-5 rounded-2xl transition shadow-xl shadow-blue-600/30 border border-blue-400/40 group whitespace-nowrap"
                             >
                                 <span>JELAJAHI KATALOG AKUN</span>
-                                <span className="group-hover:translate-x-1.5 transition text-base">&rarr;</span>
+                                <span className="group-hover:translate-x-1.5 transition text-base sm:text-lg">&rarr;</span>
                             </Link>
-                        </div>
-
-                        {/* Trust Badges */}
-                        <div className="pt-6 border-t border-dropbox-border/80 flex flex-wrap items-center gap-6 text-xs text-slate-400">
-                            <span className="flex items-center gap-2">
-                                <span className="text-blue-400 font-bold">✓</span> 100% Garansi Login
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <span className="text-blue-400 font-bold">✓</span> Pengiriman Cepat 24/7
-                            </span>
-                            <span className="flex items-center gap-2">
-                                <span className="text-blue-400 font-bold">✓</span> CS Standby Siaga
-                            </span>
                         </div>
                     </div>
                 </section>
@@ -151,11 +138,9 @@ export default function Home({ hotItems = [] }: HomeProps) {
                 {/* 2. TEMPAT PROMO BANNER (BANNER SPACE CAROUSEL) */}
                 <section className="space-y-4">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
-                                Event &amp; Promo Spesial
-                            </h2>
-                        </div>
+                        <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+                            Highlight &amp; Informasi
+                        </h2>
                         {/* Dot Navigasi Banner */}
                         <div className="flex items-center gap-1.5">
                             {banners.map((_, i) => (
@@ -172,31 +157,24 @@ export default function Home({ hotItems = [] }: HomeProps) {
                     </div>
 
                     {/* Banner Card Container */}
-                    <div className="relative rounded-3xl overflow-hidden border border-dropbox-border shadow-xl min-h-[220px] sm:min-h-[190px] flex items-center">
+                    <div className="relative rounded-3xl overflow-hidden border border-dropbox-border shadow-xl min-h-[170px] sm:min-h-[160px] flex items-center">
                         {banners.map((b, idx) => (
                             <div
                                 key={idx}
-                                className={`absolute inset-0 p-5 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 bg-gradient-to-r ${b.bgGradient} transition-opacity duration-700 ${
+                                className={`absolute inset-0 p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4 sm:gap-6 bg-gradient-to-r ${b.bgGradient} transition-opacity duration-700 ${
                                     activeBanner === idx ? 'opacity-100 z-10' : 'opacity-0 pointer-events-none'
                                 }`}
                             >
-                                <div className="space-y-1.5 sm:space-y-2 max-w-xl">
-                                    <span className={`text-[10px] font-black uppercase tracking-widest px-3 py-1 rounded-full border ${b.badgeBg} inline-block`}>
-                                        {b.tag}
-                                    </span>
-                                    <h3 className="text-base sm:text-2xl font-black text-white tracking-tight">
+                                <div className="space-y-1.5 max-w-xl">
+                                    <h3 className="text-lg sm:text-2xl font-black text-white tracking-tight">
                                         {b.title}
                                     </h3>
-                                    <p className="text-xs text-slate-300 font-normal line-clamp-2 sm:line-clamp-none">
+                                    <p className="text-xs sm:text-sm text-slate-300 font-normal line-clamp-2 sm:line-clamp-none">
                                         {b.subtitle}
                                     </p>
                                 </div>
 
                                 <div className="flex items-center gap-3">
-                                    <div className="hidden sm:block text-right">
-                                        <span className="text-[10px] text-slate-400 block font-semibold uppercase">KODE EVENT</span>
-                                        <span className="text-sm font-mono font-bold text-white">{b.code}</span>
-                                    </div>
                                     <Link
                                         href={b.ctaLink}
                                         className="bg-white hover:bg-slate-200 text-slate-900 font-bold text-xs px-5 py-2.5 sm:py-3 rounded-full transition shadow-md whitespace-nowrap self-start sm:self-auto"

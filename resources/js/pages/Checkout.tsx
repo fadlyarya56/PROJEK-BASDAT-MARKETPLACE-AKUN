@@ -192,9 +192,15 @@ export default function Checkout({ account }: CheckoutProps) {
                                 <div className="p-4 bg-[#0A0D15] border border-dropbox-border rounded-2xl text-xs space-y-3 text-slate-300">
                                     {selectedMethod === 'qris' && (
                                         <div className="text-center space-y-2">
-                                            <p className="text-xs text-slate-400">Scan Kode QRIS di bawah menggunakan E-Wallet / M-Banking:</p>
-                                            <div className="w-36 h-36 bg-white mx-auto rounded-xl flex items-center justify-center text-xs p-2 border border-slate-300 text-slate-800 font-bold shadow-md">
-                                                [ KODE QRIS OFFICIAL ]
+                                            <div className="w-36 h-36 bg-white mx-auto rounded-xl flex flex-col items-center justify-center p-3 border border-slate-300 text-slate-900 shadow-md">
+                                                <svg className="w-12 h-12 text-slate-800 mb-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                                                    <rect x="3" y="3" width="7" height="7" rx="1" />
+                                                    <rect x="14" y="3" width="7" height="7" rx="1" />
+                                                    <rect x="14" y="14" width="7" height="7" rx="1" />
+                                                    <rect x="3" y="14" width="7" height="7" rx="1" />
+                                                    <path d="M7 7h.01M17 7h.01M7 17h.01M17 17h.01" strokeWidth="3" strokeLinecap="round" />
+                                                </svg>
+                                                <span className="text-[10px] font-black uppercase tracking-wider text-slate-700">Pindai QRIS</span>
                                             </div>
                                             <p className="text-[10px] text-emerald-400 font-medium">Mendukung Gopay, OVO, Dana, ShopeePay, BCA, Mandiri dll</p>
                                         </div>

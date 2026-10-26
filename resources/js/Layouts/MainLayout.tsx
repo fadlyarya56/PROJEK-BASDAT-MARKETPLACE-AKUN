@@ -25,9 +25,6 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
                             <div className="flex items-baseline">
                                 <span className="text-white">TEMPAT</span>
                                 <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-sky-300 to-indigo-400 group-hover:from-blue-300 group-hover:to-cyan-300 transition">AKUN</span>
-                                <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded bg-blue-950/80 border border-blue-800/80 text-blue-400 ml-1.5 hidden sm:inline-block">
-                                    .MY.ID
-                                </span>
                             </div>
                         </Link>
                         <nav className="hidden md:flex items-center space-x-6 text-xs font-semibold uppercase tracking-wider text-dropbox-muted">

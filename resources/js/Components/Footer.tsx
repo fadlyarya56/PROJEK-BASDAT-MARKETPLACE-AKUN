@@ -137,7 +137,7 @@ export default function Footer() {
 
                         <div className="text-[11px] space-y-1 pt-1">
                             <p className="text-white font-medium">Jam Layanan CS: <span className="text-emerald-400">24 Jam / 7 Hari</span></p>
-                            <p className="text-dropbox-muted">Email: support@tempatakun.my.id</p>
+                            <p className="text-dropbox-muted">Email: support@tempatakun.id</p>
                         </div>
                     </div>
                 </div>
@@ -153,15 +153,16 @@ export default function Footer() {
                         <span className="px-2.5 py-1 rounded-md bg-[#111726] border border-dropbox-border text-[11px] font-bold text-white">OVO</span>
                     </div>
 
-                    <div className="flex items-center space-x-4 text-[11px]">
-                        <span>SSL Secured 256-Bit</span>
-                        <span>Instant Delivery</span>
+                    <div className="flex items-center space-x-4 text-[11px] text-dropbox-muted">
+                        <span>Enkripsi Kredensial 256-Bit</span>
+                        <span>•</span>
+                        <span>Garansi Anti Hack-Back</span>
                     </div>
                 </div>
 
                 {/* Copyright Bawah */}
                 <div className="pt-4 border-t border-dropbox-border/40 text-center text-[11px] text-dropbox-muted/70">
-                    <p>&copy; {new Date().getFullYear()} TempatAkun.my.id. Seluruh hak cipta dilindungi undang-undang.</p>
+                    <p>&copy; {new Date().getFullYear()} TempatAkun. Seluruh hak cipta dilindungi undang-undang.</p>
                 </div>
             </div>
         </footer>
